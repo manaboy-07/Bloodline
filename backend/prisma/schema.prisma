@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+}
+generator client {
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  moduleFormat  = "cjs"
+}
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  points      Int          @default(0)
+  roleId      Int?
+  club        String?      // optional
+  role        Role?         @relation(fields: [roleId], references: [id])
+  predictions Prediction[]
+  taunts      Taunt[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+
+model Match {
+  id           Int          @id @default(autoincrement())
+  homeTeam     String
+  awayTeam     String
+  matchDate    DateTime
+  homeScore    Int?         // actual result, optional until match is played
+  awayScore    Int?
+  status       String       @default("upcoming") // upcoming, finished
+  predictions  Prediction[]
+  createdAt    DateTime     @default(now())
+}
+
+model Prediction {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  matchId   Int
+  homeScore Int
+  awayScore Int
+  points    Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  match     Match     @relation(fields: [matchId], references: [id])
+
+  @@unique([userId, matchId]) // prevents user from predicting same match twice
+}
+
+model Taunt {
+  id        Int       @id @default(autoincrement())
+  message   String
+  userId    Int?
+  user      User?     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+}

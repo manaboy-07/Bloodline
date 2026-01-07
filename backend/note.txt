@@ -1,0 +1,17 @@
+npm install @nestjs/jwt @nestjs/passport passport passport-jwt
+npm install -D @types/passport-jwt
+
+npm install prisma --save-dev
+npm install @prisma/client
+
+npx prisma init
+npm install bcrypt class-validator class-transformer @nestjs/config
+
+npm install -D @types/bcrypt
+Do the postgress url stuff in env 
+npx prisma migrate dev --name init
+
+
+DATABASE_URL="postgresql://postgres:newpassword@localhost:5432/bloodline?schema=public"
+JWT_SECRET=topsupersecret
+JWT_EXPIRES=1d
