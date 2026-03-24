@@ -12,7 +12,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const roleName = createUserDto.email.endsWith('@bdadmin.conm')
+    const roleName = createUserDto.email.endsWith('@bdadmin.com')
       ? Role.ADMIN
       : Role.USER;
 
@@ -29,6 +29,7 @@ export class UsersService {
         password: hashedPassword,
         role: { connect: { id: role.id } },
         name: createUserDto.name,
+        club: createUserDto.club
       },
       include: { role: true },
     });
@@ -57,7 +58,14 @@ export class UsersService {
     return this.prisma.user.findMany();
   }
 
-  async findOne(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
+  async findOne(id: number): Promise<Partial<User | null>> {
+    return this.prisma.user.findUnique({ where: { id }, select: {
+      id: true,
+      name: true,
+      email: true,
+      points: true,
+      club: true,
+      createdAt: true
+    } });
   }
 }

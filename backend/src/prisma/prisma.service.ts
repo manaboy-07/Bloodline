@@ -21,7 +21,7 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect(); // connect to DB when module starts
-    console.log('Prisma connected to database');
+    console.log('Prisma connected to database manasseh');
   }
 
   async onModuleDestroy() {

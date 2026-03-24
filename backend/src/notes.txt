@@ -1,0 +1,260 @@
+query {
+  matches {
+    id
+    homeTeam {
+      name
+    }
+    awayTeam {
+      name
+    }
+    predictions {
+      user {
+        username
+      }
+      predictedScore
+    }
+  }
+}
+
+tests
+
+{
+    "email": "jerry@bdadmin.com" ,
+    "password":"jerry123$dh",
+    "name": "Jerry Rig",
+    "club": "Arsenal"
+}
+
+😂 yeah this is one of those “tiny mistake, big headache” NestJS moments.
+
+Now let’s make sure you **fully understand how to apply `JWTAuthGuard` properly + why `@Public()` exists** — this is actually *senior-level NestJS knowledge*.
+
+---
+
+# 🔐 What “applying JWTAuthGuard properly” means
+
+There are **3 ways** to use guards in NestJS:
+
+---
+
+## ✅ 1. Route-level (manual protection)
+
+```ts
+@UseGuards(JWTAuthGuard)
+@Get('profile')
+getProfile() {
+  return 'Protected route';
+}
+```
+
+👉 Only this route is protected
+👉 Everything else is open
+
+---
+
+## ✅ 2. Controller-level
+
+```ts
+@UseGuards(JWTAuthGuard)
+@Controller('users')
+export class UsersController {}
+```
+
+👉 All routes inside `users` are protected
+
+---
+
+## 🔥 3. Global Guard (BEST PRACTICE)
+
+This is what you're trying to do.
+
+### In your `main.ts` OR provider:
+
+```ts
+app.useGlobalGuards(new JWTAuthGuard(reflector));
+```
+
+**OR (better way):**
+
+```ts
+{
+  provide: APP_GUARD,
+  useClass: JWTAuthGuard,
+}
+```
+
+👉 Now:
+
+* EVERY route is protected by default 🔐
+* You don’t need to add `@UseGuards()` everywhere
+
+---
+
+# 🚨 Problem with Global Guard
+
+If everything is protected…
+
+👉 How do users:
+
+* login?
+* register?
+
+They don’t have a token yet 😅
+
+---
+
+# 🎯 Enter `@Public()` decorator
+
+This is your **escape hatch**
+
+---
+
+## ✅ What `@Public()` does
+
+```ts
+@Public()
+@Post('login')
+login() {}
+```
+
+👉 It tells your global guard:
+
+> “Skip authentication for this route”
+
+---
+
+## 🧠 How it works internally
+
+### Your decorator:
+
+```ts
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+```
+
+---
+
+### Your guard reads it:
+
+```ts
+const isPublic = this.reflector.getAllAndOverride<boolean>(
+  IS_PUBLIC_KEY,
+  [context.getHandler(), context.getClass()],
+);
+```
+
+---
+
+### Logic:
+
+```ts
+if (isPublic) {
+  return true; // skip JWT check
+}
+```
+
+---
+
+# 🔥 Full Real-World Flow
+
+### 1. Request hits your app
+
+➡️ JWTAuthGuard runs (globally)
+
+---
+
+### 2. Guard checks:
+
+* Is this route marked `@Public()`?
+
+---
+
+### 3A. If YES:
+
+✅ Skip authentication
+➡️ Allow request
+
+---
+
+### 3B. If NO:
+
+🔒 Check JWT token
+
+* Valid → allow
+* Invalid → throw 401
+
+---
+
+# 🧩 Your current setup (ideal architecture)
+
+You should have:
+
+### 🔓 Public routes
+
+```ts
+@Public()
+@Post('login')
+
+@Public()
+@Post('register')
+```
+
+---
+
+### 🔐 Protected routes
+
+```ts
+@Get('profile')
+```
+
+(no decorator needed — guard is global)
+
+---
+
+# ⚡ Clean Mental Model
+
+Think of your backend like a building:
+
+* 🔐 JWTAuthGuard = Security at the entrance
+* 🪪 JWT = ID card
+* 🚫 No ID → no entry
+* 🟢 `@Public()` = “This door is open to everyone”
+
+---
+
+# 💡 Pro-Level Tip
+
+This setup is used in:
+
+* Real production apps
+* Enterprise APIs
+* Scalable architectures
+
+Because:
+
+* You **secure everything by default**
+* You **explicitly allow exceptions**
+
+👉 This avoids security mistakes
+
+---
+
+# 🔥 Common Beginner Mistake (you avoided it now)
+
+❌ Protect routes manually everywhere
+→ easy to forget one → security hole
+
+✅ Use global guard + `@Public()`
+→ secure by default
+
+---
+
+# 🚀 Next Level (if you want)
+
+We can go deeper into:
+
+* Role-based auth (`@Roles('admin')`)
+* Refresh tokens (VERY important in real apps)
+* Logout implementation (your `signout` route 😉)
+
+Just tell me 👍

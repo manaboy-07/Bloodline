@@ -1397,6 +1397,11 @@ export type PredictionFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Skip the first `n` Predictions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Predictions.
+   */
   distinct?: Prisma.PredictionScalarFieldEnum | Prisma.PredictionScalarFieldEnum[]
 }
 

@@ -1,0 +1,267 @@
+Yes — you can **absolutely combine REST + GraphQL** 🔥
+In fact, what you’re about to do is **exactly how many real systems evolve**.
+
+Now let’s turn your schema into a **clear build roadmap (no code, just flow)** so you don’t get lost.
+
+---
+
+# 🧠 First: Your architecture (important mindset)
+
+Use:
+
+* **REST** → for auth, simple actions, admin tasks
+* **GraphQL** → for complex reads (predictions, matches, leaderboard)
+
+👉 Hybrid approach = 🔥
+
+---
+
+# 🚀 PHASE 0 — Foundation (Don’t skip this)
+
+Before writing features:
+
+1. Setup **Prisma**
+2. Connect to PostgreSQL
+3. Run migrations
+4. Generate client
+5. Seed basic data:
+
+   * Roles (Admin, User)
+
+👉 Once DB works → move on
+
+---
+
+# 🔐 PHASE 1 — Auth System (START HERE) - DONE
+
+This is your backbone.
+
+### Build with REST:
+
+1. Register user
+2. Login user (JWT)
+3. Hash passwords
+4. Assign default role
+5. Protect routes (guards)
+
+---
+
+### Add:
+
+* Role-based access (admin vs user)
+* Optional OAuth later (you already know it)
+
+👉 At the end:
+
+* You can create users
+* You can log in
+* You can identify current user
+
+---
+
+# 👤 PHASE 2 — User System
+
+Now extend your auth:
+
+1. Get current user profile
+2. Update profile (club, name)
+3. View other users (for leaderboard later)
+
+👉 Keep this REST for now (simple)
+
+---
+
+# ⚽ PHASE 3 — Match System (ADMIN-DRIVEN)
+
+Matches are the **core of your app**
+
+### Build with REST:
+
+Admin can:
+
+1. Create match
+2. Update match
+3. Set result (homeScore, awayScore)
+4. Change status (upcoming → finished)
+
+Users can:
+
+* View matches
+
+---
+
+# 🔮 PHASE 4 — Prediction System (CORE FEATURE)
+
+Now things get interesting.
+
+### Build logic first (REST is fine initially):
+
+1. User predicts a match
+2. Enforce:
+
+   * One prediction per match (`@@unique`)
+3. Allow editing before match starts
+4. Lock prediction after match starts
+
+---
+
+### VERY IMPORTANT:
+
+Define your scoring logic:
+
+Example:
+
+* Exact score → 3 points
+* Correct winner → 1 point
+* Wrong → 0
+
+👉 Implement this cleanly
+
+---
+
+# 🧮 PHASE 5 — Scoring System
+
+Triggered when:
+👉 Match status = finished
+
+Flow:
+
+1. Admin sets match result
+2. System loops through predictions
+3. Calculates points
+4. Updates:
+
+   * Prediction.points
+   * User.points
+
+👉 This is a key “backend thinking” moment
+
+---
+
+# 🧾 PHASE 6 — Introduce GraphQL (NOW it makes sense)
+
+Now switch **READ-heavy parts** to GraphQL.
+
+Use GraphQL for:
+
+### 1. Matches + predictions
+
+👉 Example need:
+
+* Match
+* User prediction
+* Scores
+
+---
+
+### 2. Leaderboard
+
+👉 Example:
+
+* Users sorted by points
+* Include predictions
+
+---
+
+### 3. User dashboard
+
+👉 One query:
+
+* user info
+* predictions
+* match data
+
+---
+
+💡 THIS is where GraphQL shines:
+👉 Avoids overfetching + multiple REST calls
+
+---
+
+# 😈 PHASE 7 — Taunts (Fun feature)
+
+Now build engagement:
+
+1. Users post taunts
+2. Link to user
+3. Show recent taunts
+
+👉 Can be REST or GraphQL
+
+---
+
+# 🧠 PHASE 8 — Optimization & Structure
+
+Now refine:
+
+* Pagination (important)
+* Filtering (matches by status)
+* Caching (later)
+* Avoid N+1 issues
+
+---
+
+# 🧪 PHASE 9 — Testing (NOW it matters)
+
+Now your app is real:
+
+Learn:
+
+* Unit tests (services)
+* Integration tests (auth, predictions)
+
+👉 Now testing makes sense
+
+---
+
+# 🚀 PHASE 10 — Advanced (Optional)
+
+Only after everything works:
+
+* Full GraphQL migration
+* Subscriptions (live score updates 👀)
+* Microservices (if scaling)
+
+---
+
+# 🧱 SIMPLE FLOW SUMMARY
+
+1. Setup DB (Prisma)
+2. Auth (REST)
+3. Users
+4. Matches (Admin)
+5. Predictions
+6. Scoring logic
+7. Add GraphQL (reads)
+8. Leaderboard
+9. Taunts
+10. Testing
+11. Optimization
+
+---
+
+# 🔥 Real advice (very important)
+
+👉 Don’t try to:
+
+* Perfect everything
+* Use GraphQL everywhere immediately
+
+Start simple:
+
+> REST → working app → then enhance with GraphQL
+
+---
+
+# ⚽ Final thought
+
+This schema you designed?
+
+👉 It’s actually **very solid** for a real product.
+
+If you execute this properly, this project can become:
+
+* Portfolio-level 🔥
+* Internship-level proof 💼
+* Possibly even monetizable 💰
+
