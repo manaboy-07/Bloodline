@@ -23,7 +23,7 @@ export class UsersService {
       throw new Error('Role not Found');
     }
 
-    return this.prisma.user.create({
+    return await this.prisma.user.create({
       data: {
         email: createUserDto.email,
         password: hashedPassword,
@@ -55,17 +55,34 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      include: { role: true}
+    });
   }
 
-  async findOne(id: number): Promise<Partial<User | null>> {
-    return this.prisma.user.findUnique({ where: { id }, select: {
+  async findOne(id: number): Promise<{
+  id: number;
+  name: string;
+  email: string;
+  roleId: number | null;
+  role: { id: number; name: string } | null;
+  points: number;
+  club: string | null;
+  createdAt: Date;
+} | null> {  
+  return this.prisma.user.findUnique({
+    where: { id },
+    select: {
       id: true,
       name: true,
       email: true,
+      roleId: true,
+      role: { select: { id: true, name: true } },
       points: true,
       club: true,
-      createdAt: true
-    } });
-  }
+      createdAt: true,
+    },
+  });
+}
+  
 }

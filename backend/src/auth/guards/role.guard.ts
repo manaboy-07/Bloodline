@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Role } from '../enums/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
-@Injectable() // ✅ Must be here for DI
+@Injectable() 
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
@@ -19,8 +19,11 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // ⚠️ Map user.roleId to Role enum
-    const userRole = user?.roleId ?? null;
+   
+    const userRole =  user?.role?.name as Role
+
+   
+    
     if (!userRole || !requiredRoles.includes(userRole)) {
       throw new UnauthorizedException('Invalid role');
     }

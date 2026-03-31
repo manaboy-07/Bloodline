@@ -1,1 +1,6 @@
-export class CreatePredictionDto {}
+export class CreatePredictionDto {
+    homeScore: number
+    awayScore: number
+    matchId: number
+
+}

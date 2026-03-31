@@ -16,7 +16,7 @@ export class AuthService {
     private userService: UsersService,
   ) {}
 
-  async validateUser(email: string, password: string){
+  async validateUser(email: string, password: string){ //return type authpayload 
     const user = await this.userService.findByEmail(email)
     if(!user) throw new UnauthorizedException('Invalid Credentials')
     //compare password
@@ -40,7 +40,14 @@ export class AuthService {
     //retrieve user from db based on id
     const user = await this.userService.findOne(userId);
     if (!user) throw new UnauthorizedException('User not Found');
-    const currentUser: CurrentUser = { id: user.id! }; //should include role later
+   
+  //  const currentUser: CurrentUser = { id: user.id!, roleId: user.roleId!, role: user.role ?? null }; //should include role later
+    const currentUser: CurrentUser = {
+    id: user.id!,
+    roleId: user.roleId!,
+    role: user.role ?? null, // this matches the updated CurrentUser type
+  };
+    console.log('Current User: ', currentUser)
     return currentUser;
   }
 

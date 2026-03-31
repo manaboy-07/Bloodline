@@ -9,18 +9,11 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-// REMOVE THIS
-// import { PrismaPg } from '@prisma/adapter-pg';
-// const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-// const prisma = new PrismaClient({ adapter });
-
-// // USE THIS INSTEAD
-// import { PrismaClient } from '@prisma/client';
-// const prisma = new PrismaClient();
 
 async function main() {
   const hashedPassword = await bcrypt.hash('securepassword', 10);
 
+  // Seed roles
   const roles = ['ADMIN', 'USER'];
   for (const role of roles) {
     await prisma.role.upsert({
@@ -30,6 +23,7 @@ async function main() {
     });
   }
   console.log('Roles successfully seeded');
+
 
   const users = [
     { email: 'john@bdadmin.com', name: 'John Admin', password: 'password123' },
@@ -49,8 +43,7 @@ async function main() {
     const roleName = u.email.endsWith('@bdadmin.com') ? 'ADMIN' : 'USER';
 
     const role = await prisma.role.findUnique({ where: { name: roleName } });
-
-    if (!role) throw new Error(`Role ${roleName} not found, seed Roles first.`);
+    if (!role) throw new Error(`Role ${roleName} not found.`);
 
     await prisma.user.upsert({
       where: { email: u.email },
@@ -59,7 +52,7 @@ async function main() {
         email: u.email,
         name: u.name,
         password: hashedPassword,
-        role: { connect: { id: role.id } },
+        role: { connect: { id: role.id} }, 
       },
     });
   }

@@ -16,7 +16,7 @@ Use:
 
 ---
 
-# 🚀 PHASE 0 — Foundation (Don’t skip this)
+# 🚀 PHASE 0 — Foundation (Don’t skip this) - DONE
 
 Before writing features:
 
