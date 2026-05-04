@@ -1,26 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTauntDto } from './dto/create-taunt.dto';
 import { UpdateTauntDto } from './dto/update-taunt.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+import { Taunt, Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class TauntService {
-  create(createTauntDto: CreateTauntDto) {
-    return 'This action adds a new taunt';
+  constructor (private prisma: PrismaService){}
+
+  async create(createTauntDto: CreateTauntDto, userId: number) {
+    const { message } = createTauntDto
+    if(message === ""){
+       throw new BadRequestException("Message cannot be empty")
+    }
+    
+    return await this.prisma.taunt.create({
+      data: {
+        message,
+        userId
+      }
+    }) 
   }
 
-  findAll() {
-    return `This action returns all taunt`;
+  async findAll(): Promise<Taunt[]> {
+    return await this.prisma.taunt.findMany({
+      include: {user: true}
+    })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} taunt`;
+  async findOne(id: number) {
+    return await this.prisma.taunt.findUnique({
+      where: {id},
+      select: {
+        message: true,
+        user: true
+      }
+    })//may not include userr here
+  }
+  
+async findUserTaunt(userId: number) {
+  if (!userId) {
+    throw new NotFoundException("UserId not provided");
+  }
+  //sinc a user cna have many taunts
+  const taunts = await this.prisma.taunt.findMany({
+    where: { userId },
+    select: {
+      message: true,
+      user: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return taunts;
+}
+  async update(id: number, data: Prisma.TauntUpdateInput) {
+    return await this.prisma.taunt.update({
+      where: {id},
+      data
+    })
   }
 
-  update(id: number, updateTauntDto: UpdateTauntDto) {
-    return `This action updates a #${id} taunt`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} taunt`;
+  async delete(id: number) {
+    return await this.prisma.taunt.delete({where: {id}})
   }
 }

@@ -1,0 +1,33 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type MatchModel {
+  id: Float!
+  homeTeam: String!
+  awayTeam: String!
+  homeScore: Int
+  awayScore: Int
+  predictions: [PredictionModel!]
+}
+
+type PredictionModel {
+  id: Float!
+  homeScore: Int!
+  awayScore: Int!
+  points: Int!
+  match: MatchModel!
+}
+
+type UserModel {
+  id: Int!
+  name: String!
+  points: Int!
+  predictions: [PredictionModel!]!
+}
+
+type Query {
+  userDashboard: UserModel!
+  matches: [MatchModel!]!
+  leaderboard: [UserModel!]!
+}

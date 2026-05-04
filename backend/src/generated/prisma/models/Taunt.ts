@@ -189,7 +189,7 @@ export type TauntGroupByOutputType = {
   _max: TauntMaxAggregateOutputType | null
 }
 
-type GetTauntGroupByPayload<T extends TauntGroupByArgs> = Prisma.PrismaPromise<
+export type GetTauntGroupByPayload<T extends TauntGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TauntGroupByOutputType, T['by']> &
       {

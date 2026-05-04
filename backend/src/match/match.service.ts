@@ -23,7 +23,7 @@ export class MatchService {
   }
 
   async findAll(): Promise<Match[]> {
-    return this.prisma.match.findMany({
+    return await this.prisma.match.findMany({
       include: { predictions: true}
     })
   }

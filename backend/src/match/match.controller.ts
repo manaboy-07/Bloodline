@@ -33,7 +33,7 @@ export class MatchController {
   @Roles(Role.ADMIN)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMatchDto: UpdateMatchDto) {
-  return this.matchService.update(+id, updateMatchDto);
+    return this.matchService.update(+id, updateMatchDto);
   }
   
   @Roles(Role.ADMIN)

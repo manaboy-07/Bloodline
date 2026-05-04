@@ -4,10 +4,11 @@ import { PredictionController } from './prediction.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { UsersModule } from 'src/users/users.module';
 import { MatchModule } from 'src/match/match.module';
+import { CronService } from 'src/cron/cron.service';
 
 @Module({
   controllers: [PredictionController],
-  providers: [PredictionService],
+  providers: [PredictionService, CronService],
   exports: [PredictionService],
   imports: [PrismaModule, UsersModule, MatchModule]
 })

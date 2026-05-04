@@ -1,1 +1,4 @@
-export class CreateTauntDto {}
+export class CreateTauntDto {
+    message: string;
+    
+}

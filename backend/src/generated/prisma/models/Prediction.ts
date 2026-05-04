@@ -226,7 +226,7 @@ export type PredictionGroupByOutputType = {
   _max: PredictionMaxAggregateOutputType | null
 }
 
-type GetPredictionGroupByPayload<T extends PredictionGroupByArgs> = Prisma.PrismaPromise<
+export type GetPredictionGroupByPayload<T extends PredictionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PredictionGroupByOutputType, T['by']> &
       {

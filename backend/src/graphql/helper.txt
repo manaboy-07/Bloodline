@@ -1,0 +1,354 @@
+
+
+
+Use GraphQL for:
+
+### 1. Matches + predictions
+
+👉 Example need:
+
+* Match
+* User prediction
+* Scores
+
+---
+
+# 🧠 PHASE 6 GOAL (What you’re actually doing)
+
+👉 You are NOT replacing REST
+👉 You are ADDING GraphQL for **read-heavy endpoints**
+
+---
+
+# ⚙️ STEP 1 — Install GraphQL in NestJS
+
+```bash
+npm install @nestjs/graphql @nestjs/apollo graphql apollo-server-express
+```
+
+---
+
+# ⚙️ STEP 2 — Configure GraphQL Module
+
+In `app.module.ts`:
+
+```ts
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+
+GraphQLModule.forRoot<ApolloDriverConfig>({
+  driver: ApolloDriver,
+  autoSchemaFile: true,
+});
+```
+
+---
+
+# 🧠 STEP 3 — Think in GraphQL Terms (VERY IMPORTANT)
+
+GraphQL = **types + resolvers**
+
+👉 Not controllers anymore
+👉 You build:
+
+* Object Types (like DTOs)
+* Resolvers (like controllers)
+
+---
+
+# 🏗️ STEP 4 — Create Your GraphQL Types
+
+## 🔥 Match Type
+
+```ts
+import { ObjectType, Field, Int } from '@nestjs/graphql';
+
+@ObjectType()
+export class MatchType {
+  @Field(() => Int)
+  id: number;
+
+  @Field()
+  homeTeam: string;
+
+  @Field()
+  awayTeam: string;
+
+  @Field(() => Int, { nullable: true })
+  homeScore?: number;
+
+  @Field(() => Int, { nullable: true })
+  awayScore?: number;
+}
+```
+
+---
+
+## 🔥 Prediction Type
+
+```ts
+@ObjectType()
+export class PredictionType {
+  @Field(() => Int)
+  id: number;
+
+  @Field(() => Int)
+  homeScore: number;
+
+  @Field(() => Int)
+  awayScore: number;
+
+  @Field(() => Int)
+  points: number;
+
+  @Field(() => MatchType)
+  match: MatchType;
+}
+```
+
+---
+
+## 🔥 User Type
+
+```ts
+@ObjectType()
+export class UserType {
+  @Field(() => Int)
+  id: number;
+
+  @Field()
+  name: string;
+
+  @Field(() => Int)
+  points: number;
+
+  @Field(() => [PredictionType])
+  predictions: PredictionType[];
+}
+```
+
+---
+
+# 🧠 STEP 5 — Build Your FIRST Resolver
+
+👉 Think of resolver like:
+
+> “GraphQL Controller”
+
+---
+
+## 🔥 1. Matches + Predictions Resolver
+
+```ts
+import { Resolver, Query } from '@nestjs/graphql';
+
+@Resolver()
+export class MatchResolver {
+  constructor(private prisma: PrismaService) {}
+
+  @Query(() => [MatchType])
+  async matches() {
+    return this.prisma.match.findMany({
+      include: {
+        predictions: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+  }
+}
+```
+
+---
+
+# 🧠 STEP 6 — Leaderboard Resolver
+
+```ts
+@Resolver()
+export class LeaderboardResolver {
+  constructor(private prisma: PrismaService) {}
+
+  @Query(() => [UserType])
+  async leaderboard() {
+    return this.prisma.user.findMany({
+      orderBy: {
+        points: 'desc',
+      },
+      take: 10,
+      include: {
+        predictions: true,
+      },
+    });
+  }
+}
+```
+
+---
+
+# 🧠 STEP 7 — User Dashboard Resolver (IMPORTANT)
+
+👉 This is where GraphQL shines 🔥
+
+```ts
+@Resolver()
+export class UserResolver {
+  constructor(private prisma: PrismaService) {}
+
+  @Query(() => UserType)
+  async userDashboard(@Args('userId', { type: () => Int }) userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        predictions: {
+          include: {
+            match: true,
+          },
+        },
+      },
+    });
+  }
+}
+```
+
+---
+
+# 🧪 STEP 8 — Test in GraphQL Playground
+
+Run app, go to:
+
+```
+http://localhost:3000/graphql
+```
+
+---
+
+## 🔥 Example Query (THIS IS THE MAGIC)
+
+```graphql
+query {
+  leaderboard {
+    name
+    points
+    predictions {
+      homeScore
+      awayScore
+    }
+  }
+}
+```
+
+---
+
+## 🔥 User Dashboard Query
+
+```graphql
+query {
+  userDashboard(userId: 1) {
+    name
+    points
+    predictions {
+      homeScore
+      awayScore
+      match {
+        homeTeam
+        awayTeam
+      }
+    }
+  }
+}
+```
+
+---
+
+# 🧠 WHY THIS IS POWERFUL
+
+👉 Instead of:
+
+```text
+REST:
+GET /user
+GET /predictions
+GET /matches
+```
+
+👉 You do:
+
+```graphql
+ONE QUERY → everything
+```
+
+---
+
+# ⚠️ IMPORTANT BEST PRACTICES
+
+## 1. DO NOT overload resolvers
+
+Bad:
+
+```ts
+huge nested logic ❌
+```
+
+Good:
+
+```ts
+Call service layer ✅
+```
+
+---
+
+## 2. Reuse your services
+
+```ts
+constructor(private predictionService: PredictionService)
+```
+
+---
+
+## 3. Keep REST for:
+
+* Auth
+* Writes (POST, PUT)
+
+Use GraphQL for:
+
+* Reads
+
+---
+
+# 🚀 YOUR TASK (DO THIS FIRST)
+
+Build these 3:
+
+### ✅ 1. matches query
+
+### ✅ 2. leaderboard query
+
+### ✅ 3. userDashboard query
+
+---
+
+# 🏁 FINAL MINDSET
+
+👉 GraphQL is NOT harder
+👉 It’s just:
+
+> “Frontend decides what data it wants”
+
+---
+
+# 💬 When You’re Done
+
+Come back and say:
+
+> “review my resolver”
+
+I’ll:
+
+* Fix your structure
+* Optimize your queries
+* Make it senior-level
+
+Let’s cook 🔥

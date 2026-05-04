@@ -1,0 +1,17 @@
+{
+    "email": "ronald@gmail.com" ,
+    "password":"ronald123",
+    "name": "Ronald barry",
+    "club": "Real Madrid"
+}
+
+{
+    "email": "Chinedu@bdadmin" ,
+    "password":"chinedu123",
+    "name": "Madu Chinedu",
+    "club": "Liverpool"
+}
+{
+    "email": "kudus@bdadmin.com" ,
+    "password":"kudus123"
+}

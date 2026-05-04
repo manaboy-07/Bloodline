@@ -15,3 +15,9 @@ npx prisma migrate dev --name init
 DATABASE_URL="postgresql://postgres:newpassword@localhost:5432/bloodline?schema=public"
 JWT_SECRET=topsupersecret
 JWT_EXPIRES=1d
+
+Auth test done except signout
+User test done
+match test done but needs fix
+prediction test done
+

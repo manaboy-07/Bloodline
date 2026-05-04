@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,7 +20,7 @@ export class UsersService {
       where: { name: roleName },
     });
     if (!role) {
-      throw new Error('Role not Found');
+      throw new NotFoundException('Role not found');
     }
 
     return await this.prisma.user.create({
@@ -29,7 +29,7 @@ export class UsersService {
         password: hashedPassword,
         role: { connect: { id: role.id } },
         name: createUserDto.name,
-        club: createUserDto.club
+        club: createUserDto.club,
       },
       include: { role: true },
     });
@@ -56,33 +56,32 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.prisma.user.findMany({
-      include: { role: true}
+      include: { role: true },
     });
   }
 
   async findOne(id: number): Promise<{
-  id: number;
-  name: string;
-  email: string;
-  roleId: number | null;
-  role: { id: number; name: string } | null;
-  points: number;
-  club: string | null;
-  createdAt: Date;
-} | null> {  
-  return this.prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      roleId: true,
-      role: { select: { id: true, name: true } },
-      points: true,
-      club: true,
-      createdAt: true,
-    },
-  });
-}
-  
+    id: number;
+    name: string;
+    email: string;
+    roleId: number | null;
+    role: { id: number; name: string } | null;
+    points: number;
+    club: string | null;
+    createdAt: Date;
+  } | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        roleId: true,
+        role: { select: { id: true, name: true } },
+        points: true,
+        club: true,
+        createdAt: true,
+      },
+    });
+  }
 }

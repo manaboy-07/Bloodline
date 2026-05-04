@@ -9,7 +9,6 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-
 async function main() {
   const hashedPassword = await bcrypt.hash('securepassword', 10);
 
@@ -23,7 +22,6 @@ async function main() {
     });
   }
   console.log('Roles successfully seeded');
-
 
   const users = [
     { email: 'john@bdadmin.com', name: 'John Admin', password: 'password123' },
@@ -52,7 +50,7 @@ async function main() {
         email: u.email,
         name: u.name,
         password: hashedPassword,
-        role: { connect: { id: role.id} }, 
+        role: { connect: { id: role.id } },
       },
     });
   }

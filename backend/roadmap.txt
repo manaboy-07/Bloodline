@@ -59,7 +59,7 @@ This is your backbone.
 
 ---
 
-# 👤 PHASE 2 — User System
+# 👤 PHASE 2 — User System DONE
 
 Now extend your auth:
 
@@ -71,7 +71,7 @@ Now extend your auth:
 
 ---
 
-# ⚽ PHASE 3 — Match System (ADMIN-DRIVEN)
+# ⚽ PHASE 3 — Match System (ADMIN-DRIVEN) DONE
 
 Matches are the **core of your app**
 
@@ -90,7 +90,7 @@ Users can:
 
 ---
 
-# 🔮 PHASE 4 — Prediction System (CORE FEATURE)
+# 🔮 PHASE 4 — Prediction System (CORE FEATURE) -DOne
 
 Now things get interesting.
 
@@ -119,7 +119,7 @@ Example:
 
 ---
 
-# 🧮 PHASE 5 — Scoring System
+# 🧮 PHASE 5 — Scoring System -DONE
 
 Triggered when:
 👉 Match status = finished
@@ -178,7 +178,7 @@ Use GraphQL for:
 
 ---
 
-# 😈 PHASE 7 — Taunts (Fun feature)
+# 😈 PHASE 7 — Taunts (Fun feature) - DONE
 
 Now build engagement:
 

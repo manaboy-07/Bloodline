@@ -1,3 +1,40 @@
 return user role instead of user  role id
 Implement google auth
 dont return password
+make sure the same match isnt created twice !!
+try to only get user name after prediction
+ensure same taunt texts cant be used
+user can only update his own taunt
+yet to run the points updates  !!!!!
+add match status uocoming, finished etc
+as long as match has not finished or started rather you can update it / set dealine
+try reduce the struture of some responses e.g taunt doesnt need to include user
+
+for cron
+
+
+🧠 Smarter Automation (BEST PRACTICE)
+
+Instead of blindly running cron:
+
+👉 You can:
+
+Find matches where:
+matchDate < now
+status = "upcoming"
+Score them automatically
+@Cron('*/10 * * * *') // every 10 mins
+async autoScoreMatches() {
+  const matches = await this.prisma.match.findMany({
+    where: {
+      matchDate: { lt: new Date() },
+      status: 'upcoming',
+    },
+  });
+
+  for (const match of matches) {
+    await this.predictionService.scoreMatch(match.id);
+  }
+
+  await this.predictionService.updateUserPoints();
+}

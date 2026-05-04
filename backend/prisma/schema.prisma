@@ -42,7 +42,10 @@ model Match {
   matchDate    DateTime
   homeScore    Int?         // actual result, optional until match is played
   awayScore    Int?
-  status       String       @default("upcoming") // upcoming, finished
+ 
+  status     String   @default("pending") // pending, finished
+
+  isScored   Boolean  @default(false) 
   predictions  Prediction[]
   createdAt    DateTime     @default(now())
 }

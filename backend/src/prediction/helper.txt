@@ -1,0 +1,11 @@
+Transaction and aggregation e.g _sum
+
+
+import { ScheduleModule } from '@nestjs/schedule';
+
+@Module({
+  imports: [
+    ScheduleModule.forRoot(),
+  ],
+})
+export class AppModule {}

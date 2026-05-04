@@ -24,12 +24,36 @@ tests
     "name": "Jerry Rig",
     "club": "Arsenal"
 }
+{
+    "email": "Muna@gmail.com" ,
+    "password":"munachi123",
+    "name": "muna",
+    "club": "Arsenal"
+}
+{
+    "email": "kudus@bdamin.com" ,
+    "password":"kudus123",
+    "name": "kukudus",
+    "club": "Real Madrid"
+}
 
-😂 yeah this is one of those “tiny mistake, big headache” NestJS moments.
+ADMIN
+{
+    "email": "kudus@bdadmin.com" ,
+    "password":"kudus123"
+}
+{
+    "email": "farouk@gmail.com" ,
+    "password":"ganiyu123"
+}
 
-Now let’s make sure you **fully understand how to apply `JWTAuthGuard` properly + why `@Public()` exists** — this is actually *senior-level NestJS knowledge*.
 
----
+MATCH
+{
+  "homeTeam": "Arsenal",
+  "awayTeam": "Chelsea",
+  "matchDate": "2026-04-01T15:00:00.000Z"
+}
 
 # 🔐 What “applying JWTAuthGuard properly” means
 
@@ -134,16 +158,6 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 ---
 
-### Your guard reads it:
-
-```ts
-const isPublic = this.reflector.getAllAndOverride<boolean>(
-  IS_PUBLIC_KEY,
-  [context.getHandler(), context.getClass()],
-);
-```
-
----
 
 ### Logic:
 
@@ -244,17 +258,21 @@ Because:
 ❌ Protect routes manually everywhere
 → easy to forget one → security hole
 
-✅ Use global guard + `@Public()`
-→ secure by default
+id: number;
+  roleId: number;
+  role: {
+    id: number;
+    name: string; // this is the string enum you want
+  } | null;
 
----
-
-# 🚀 Next Level (if you want)
-
-We can go deeper into:
-
-* Role-based auth (`@Roles('admin')`)
-* Refresh tokens (VERY important in real apps)
-* Logout implementation (your `signout` route 😉)
-
-Just tell me 👍
+  userDashboard{
+    id
+    name
+    points
+    predictions{
+      match{
+        homeTeam
+        awayTeam
+      }
+    }
+  }
