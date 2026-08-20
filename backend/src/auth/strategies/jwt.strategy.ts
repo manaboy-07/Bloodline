@@ -1,28 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
+
 import { AuthJwtPayload } from '../types/auth-jwtPayload';
 import { AuthService } from '../auth.service';
 
-//Check if the user is authenticated
+const cookieExtractor = (req: Request): string | null => {
+  if (req?.cookies?.access_token) {
+    return req.cookies.access_token;
+  }
+
+  return null;
+};
+
 @Injectable()
 export class JWTStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    private authService: AuthService,
-  ) {
+  constructor(private authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET!,
     });
   }
+
   async validate(payload: AuthJwtPayload) {
-    console.log( {
-      message: 'Validating in JWT Strategy',
-      payload,
-    })
-    const userId = payload.sub //get the id
-    return await this.authService.validateJwtUser(userId) //returs current user
-    
+    const userId = payload.sub;
+
+    return this.authService.validateJwtUser(userId);
   }
 }

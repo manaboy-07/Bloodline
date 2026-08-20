@@ -40,12 +40,9 @@ model Match {
   homeTeam     String
   awayTeam     String
   matchDate    DateTime
-  homeScore    Int?         // actual result, optional until match is played
+  homeScore    Int?         
   awayScore    Int?
- 
-  status     String   @default("pending") // pending, finished
-
-  isScored   Boolean  @default(false) 
+  status       String       @default("upcoming") 
   predictions  Prediction[]
   createdAt    DateTime     @default(now())
 }
@@ -62,7 +59,7 @@ model Prediction {
   user      User      @relation(fields: [userId], references: [id])
   match     Match     @relation(fields: [matchId], references: [id])
 
-  @@unique([userId, matchId]) // prevents user from predicting same match twice
+  @@unique([userId, matchId]) // prevents user from predicting same match twice this is key manasseh
 }
 
 model Taunt {

@@ -1,0 +1,534 @@
+"use client";
+
+import Link from "next/link";
+import { useRef } from "react";
+
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+
+import PlayerList from "./PlayerList";
+import Winner from "./Winner";
+
+import { ArrowRight, Trophy, CalendarDays, Target } from "lucide-react";
+
+// REGISTER GSAP PLUGIN
+gsap.registerPlugin(useGSAP);
+
+const Dashboard = () => {
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const tl = gsap.timeline({
+        defaults: {
+          ease: "power3.out",
+        },
+      });
+
+      // INITIAL STATES
+      gsap.set(".hero-content", {
+        opacity: 0,
+        y: 40,
+      });
+
+      gsap.set(".hero-glow", {
+        opacity: 0,
+        scale: 0.7,
+      });
+
+      gsap.set(".hero-badge", {
+        opacity: 0,
+        y: 15,
+      });
+
+      gsap.set(".hero-title", {
+        opacity: 0,
+        y: 30,
+      });
+
+      gsap.set(".hero-description", {
+        opacity: 0,
+        y: 20,
+      });
+
+      gsap.set(".hero-button", {
+        opacity: 0,
+        y: 15,
+      });
+
+      gsap.set(".hero-rank", {
+        opacity: 0,
+        x: 40,
+      });
+
+      gsap.set(".stat-card", {
+        opacity: 0,
+        y: 35,
+      });
+
+      gsap.set(".dashboard-section", {
+        opacity: 0,
+        y: 40,
+      });
+
+      // MASTER TIMELINE
+      tl.to(".hero-glow", {
+        opacity: 1,
+        scale: 1,
+        duration: 1.2,
+      })
+
+        .to(
+          ".hero-content",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+          },
+          "-=1",
+        )
+
+        .to(
+          ".hero-badge",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+          },
+          "-=0.7",
+        )
+
+        .to(
+          ".hero-title",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+          },
+          "-=0.3",
+        )
+
+        .to(
+          ".hero-description",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+          },
+          "-=0.5",
+        )
+
+        .to(
+          ".hero-button",
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.12,
+            duration: 0.5,
+          },
+          "-=0.3",
+        )
+
+        .to(
+          ".hero-rank",
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.9,
+          },
+          "-=0.8",
+        )
+
+        .to(
+          ".stat-card",
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.12,
+            duration: 0.7,
+          },
+          "-=0.2",
+        )
+
+        .to(
+          ".dashboard-section",
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.18,
+            duration: 0.9,
+          },
+          "-=0.2",
+        );
+
+      // HOVER FLOAT EFFECT
+      const cards = gsap.utils.toArray(".stat-card");
+
+      cards.forEach((card: any) => {
+        card.addEventListener("mouseenter", () => {
+          gsap.to(card, {
+            y: -6,
+            duration: 0.25,
+          });
+        });
+
+        card.addEventListener("mouseleave", () => {
+          gsap.to(card, {
+            y: 0,
+            duration: 0.25,
+          });
+        });
+      });
+    },
+    { scope: container },
+  );
+
+  return (
+    <div
+      ref={container}
+      className="
+       w-full
+        space-y-4
+        bg-neutral-950
+        text-white
+      "
+    >
+      {/* HERO */}
+      <section
+        className="
+          hero-content
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-neutral-800
+          bg-gradient-to-br
+          from-neutral-900
+          via-neutral-950
+          to-red-950/40
+          p-8
+          shadow-[0_0_60px_rgba(255,0,0,0.08)]
+        "
+      >
+        {/* GLOW */}
+        <div
+          className="
+            hero-glow
+            absolute
+            -top-32
+            right-0
+            h-72
+            w-72
+            rounded-full
+            bg-red-500/10
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            z-10
+            flex
+            flex-col
+            gap-8
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
+          "
+        >
+          {/* LEFT */}
+          <div className="max-w-2xl">
+            <p
+              className="
+                hero-badge
+                mb-3
+                text-sm
+                uppercase
+                tracking-[0.3em]
+                text-red-400
+              "
+            >
+              Bloodline Predictions
+            </p>
+
+            <h1
+              className="
+                hero-title
+                text-5xl
+                font-black
+                leading-tight
+                tracking-tight
+              "
+            >
+              Predict.
+              <span className="text-red-500"> Compete.</span>
+              <br />
+              Dominate the Leaderboard.
+            </h1>
+
+            <p
+              className="
+                hero-description
+                mt-5
+                max-w-xl
+                text-base
+                leading-relaxed
+                text-neutral-400
+              "
+            >
+              Stay ahead of your friends, predict football scores, earn points,
+              and rise through the Bloodline rankings.
+            </p>
+
+            {/* BUTTONS */}
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href="/matches"
+                className="
+                  hero-button
+                  group
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  bg-red-600
+                  px-5
+                  py-3
+                  font-medium
+                  transition-all
+                  duration-300
+                  hover:bg-red-500
+                "
+              >
+                Predict Matches
+                <ArrowRight
+                  className="
+                    h-4
+                    w-4
+                    transition-transform
+                    duration-300
+                    group-hover:translate-x-1
+                  "
+                />
+              </Link>
+
+              <Link
+                href="/leaderboard"
+                className="
+                  hero-button
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-neutral-700
+                  bg-neutral-900
+                  px-5
+                  py-3
+                  font-medium
+                  text-neutral-300
+                  transition-all
+                  duration-300
+                  hover:border-red-500/40
+                  hover:text-white
+                "
+              >
+                View Rankings
+              </Link>
+            </div>
+          </div>
+
+          {/* RANK CARD */}
+          <div
+            className="
+              hero-rank
+              hidden
+              h-56
+              w-56
+              flex-col
+              justify-center
+              rounded-3xl
+              border
+              border-neutral-800
+              bg-neutral-900/80
+              p-6
+              backdrop-blur-xl
+              lg:flex
+            "
+          >
+            <p className="text-sm text-neutral-400">Current Position</p>
+
+            <h2 className="mt-3 text-7xl font-black text-red-500">#4</h2>
+
+            <p className="mt-4 text-sm text-neutral-500">
+              Only 12 points behind the leader.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="grid gap-4 md:grid-cols-3">
+        {/* CARD 1 */}
+        <div
+          className="
+            stat-card
+            group
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-5
+            transition-all
+            duration-300
+            hover:border-blue-500/30
+          "
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-400">Upcoming Matches</p>
+
+              <h2 className="mt-3 text-4xl font-black">12</h2>
+            </div>
+
+            <div className="rounded-2xl bg-blue-500/10 p-3">
+              <CalendarDays className="h-7 w-7 text-blue-400" />
+            </div>
+          </div>
+
+          <Link
+            href="/matches"
+            className="
+              mt-5
+              inline-flex
+              text-sm
+              text-blue-400
+              transition-colors
+              hover:text-blue-300
+            "
+          >
+            Make prediction →
+          </Link>
+        </div>
+
+        {/* CARD 2 */}
+        <div
+          className="
+            stat-card
+            group
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-5
+            transition-all
+            duration-300
+            hover:border-emerald-500/30
+          "
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-400">Weekly Points</p>
+
+              <h2 className="mt-3 text-4xl font-black">20</h2>
+            </div>
+
+            <div className="rounded-2xl bg-emerald-500/10 p-3">
+              <Target className="h-7 w-7 text-emerald-400" />
+            </div>
+          </div>
+
+          <p className="mt-5 text-sm text-neutral-500">
+            +8 points from last week
+          </p>
+        </div>
+
+        {/* CARD 3 */}
+        <div
+          className="
+            stat-card
+            group
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-5
+            transition-all
+            duration-300
+            hover:border-yellow-500/30
+          "
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-400">Overall Points</p>
+
+              <h2 className="mt-3 text-4xl font-black">86</h2>
+            </div>
+
+            <div className="rounded-2xl bg-yellow-500/10 p-3">
+              <Trophy className="h-7 w-7 text-yellow-400" />
+            </div>
+          </div>
+
+          <p className="mt-5 text-sm text-neutral-500">Top 10% globally</p>
+        </div>
+      </section>
+
+      {/* LOWER SECTION */}
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        {/* LEADERBOARD */}
+        <div
+          className="
+            dashboard-section
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-5
+          "
+        >
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Top Predictors</h2>
+
+              <p className="mt-1 text-sm text-neutral-400">
+                Weekly leaderboard standings
+              </p>
+            </div>
+
+            <Link
+              href="/leaderboard"
+              className="
+                text-sm
+                text-red-400
+                transition-colors
+                hover:text-red-300
+              "
+            >
+              View all →
+            </Link>
+          </div>
+
+          <PlayerList isShortList={true} />
+        </div>
+
+        {/* WINNER */}
+        <div
+          className="
+            dashboard-section
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-5
+          "
+        >
+          <Winner />
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Dashboard;

@@ -28,6 +28,6 @@ type UserModel {
 
 type Query {
   userDashboard: UserModel!
-  matches: [MatchModel!]!
   leaderboard: [UserModel!]!
+  matches: [MatchModel!]!
 }

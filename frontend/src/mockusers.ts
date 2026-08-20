@@ -76,6 +76,14 @@ export const users: LeaderboardUser[] = [
   },
 ];
 
-export const getTopThreeUsers = (list: LeaderboardUser[]) => {
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  points: number;
+  club: string;
+  email?: string;
+  
+}
+export const getTopThreeUsers = (list: LeaderboardEntry[]) => {
   return [...list].sort((a, b) => b.points - a.points).slice(0, 3);
 };

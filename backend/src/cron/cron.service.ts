@@ -16,7 +16,7 @@ export class CronService {
     private prisma: PrismaService,
   ) {}
 
-  @Cron('*/2 * * * *')
+  @Cron('*/6 * * * *')
   async handleCron() {
     console.log('Running scheduled job...');
 

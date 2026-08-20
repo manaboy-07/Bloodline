@@ -7,6 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { CurrentUser } from './types/current-user';
 import { AuthJwtPayload } from './types/auth-jwtPayload';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -38,31 +39,40 @@ export class AuthService {
 
    async validateJwtUser(userId: number) {
     //retrieve user from db based on id
-    const user = await this.userService.findOne(userId);
-    if (!user) throw new UnauthorizedException('User not Found');
-   
-  //  const currentUser: CurrentUser = { id: user.id!, roleId: user.roleId!, role: user.role ?? null }; //should include role later
-    const currentUser: CurrentUser = {
-    id: user.id!,
-    roleId: user.roleId!,
-    role: user.role ?? null, // this matches the updated CurrentUser type
+      const user = await this.userService.findOne(userId);
+      if (!user) throw new UnauthorizedException('User not Found');
+    
+    //  const currentUser: CurrentUser = { id: user.id!, roleId: user.roleId!, role: user.role ?? null }; //should include role later
+      const currentUser: CurrentUser = {
+        id: user.id!,
+        roleId: user.roleId!,
+        role: user.role ?? null, 
+    };
+      console.log('Current User: ', currentUser)
+      return currentUser;
+  }
+
+ async login(user: any, res: Response) {
+  const payload: AuthJwtPayload = {
+    sub: user.id,
+    email: user.email,
+    roleId: user.roleId,
   };
-    console.log('Current User: ', currentUser)
-    return currentUser;
-  }
 
-  async login(user: any) {
-    const payload: AuthJwtPayload = {
-      sub: user.id,
-      email: user.email,
-      roleId: user.roleId
-    };
-    console.log(payload)
+  const token = this.jwtService.sign(payload);
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
-  }
+  res.cookie('access_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24,
+  });
+
+  return res.json({
+    message: 'Login successful',
+  });
+}
 }
 // Local Strategy: Authenticates user using credentials
 // JWT Strategy: Authorizes access using a verified token
+//curret user is gotten from jwt strategy

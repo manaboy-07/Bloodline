@@ -1,0 +1,109 @@
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+export const BloodLoader = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dropletRef = useRef<SVGGElement>(null);
+
+  useGSAP(() => {
+    if (!containerRef.current || !dropletRef.current) return;
+
+    const tl = gsap.timeline({
+      repeat: -1,
+      repeatDelay: 1
+    });
+
+    // Reset droplet above screen
+    gsap.set(dropletRef.current, { 
+      y: -150,
+      scaleX: 1,
+      scaleY: 1,
+      opacity: 0,
+      x: window.innerWidth / 2
+    });
+
+    tl.to(dropletRef.current, {
+      opacity: 1,
+      duration: 0.3,
+    })
+    .to(dropletRef.current, {
+      y: window.innerHeight / 2,
+      duration: 2.2,
+      ease: "power2.inOut",
+    })
+    .to(dropletRef.current, {
+      scaleX: 0.6,
+      scaleY: 1.6,
+      duration: 1.1,
+      ease: "none"
+    }, 0.3) // Stretch during mid-fall
+    .to(dropletRef.current, {
+      scaleX: 1.3,
+      scaleY: 0.7,
+      duration: 0.4,
+      ease: "power2.out"
+    }) // Soft "impact" or settling at center
+    .to(dropletRef.current, {
+      scale: 1,
+      duration: 0.6,
+      ease: "elastic.out(1, 0.3)"
+    })
+    .to(dropletRef.current, {
+      opacity: 0,
+      scale: 0.8,
+      duration: 1,
+      delay: 0.5,
+      ease: "power2.in"
+    });
+
+  }, { scope: containerRef });
+
+  return (
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 bg-[#030303] overflow-hidden flex items-center justify-center"
+    >
+      {/* Atmospheric Glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_#3a0000_0%,_transparent_70%)] opacity-10" />
+      </div>
+
+      <svg className="absolute inset-0 w-full h-full pointer-events-none">
+        <defs>
+          <filter id="blood-goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+            <feColorMatrix 
+              in="blur" 
+              mode="matrix" 
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" 
+              result="goo" 
+            />
+          </filter>
+        </defs>
+
+        <g filter="url(#blood-goo)">
+          <g ref={dropletRef}>
+            <path 
+              d="M0,-45 C0,-45 -22,-10 -22,25 C-22,42 -12,50 0,50 C12,50 22,42 22,25 C22,-10 0,-45 0,-45 Z" 
+              fill="#800000" 
+            />
+          </g>
+        </g>
+      </svg>
+
+      {/* Subtle Label */}
+      <div className="absolute bottom-12 w-full text-center opacity-20">
+        <p className="text-[#800000] font-mono text-[10px] tracking-[1.5em] uppercase">
+          Viscous
+        </p>
+      </div>
+
+      {/* Vignette */}
+      <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.9)] pointer-events-none" />
+    </div>
+  );
+};
+
+
+

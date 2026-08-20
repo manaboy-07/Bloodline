@@ -1,0 +1,7 @@
+Fix loading state 
+Fix sidebar 
+Revisit everything sha
+
+FIx and implement roles,
+do cloudinary stuff.
+winner implementation.

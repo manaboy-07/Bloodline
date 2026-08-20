@@ -9,7 +9,8 @@ export class LeaderboardService {
     return await this.prisma.user.findMany({
       orderBy: { points: 'desc' },
       take: 10,
-      include: { predictions: true },
+      include: { predictions: false },
+      
     });
   }
 }

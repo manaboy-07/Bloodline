@@ -12,3 +12,22 @@ export type LeaderboardUser = {
   taunt: string;
   club: string;
 };
+export interface Match {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status: "pending" | "live" | "finished";
+  matchDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserDto {
+  email: string;
+  password: string;
+  name: string;
+  club?: string;
+}
+export type UpdateUserDto = Partial<CreateUserDto>

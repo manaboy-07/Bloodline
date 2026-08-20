@@ -18,10 +18,11 @@ import { JWTAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Role } from 'src/auth/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/role.guard';
+import { LeaderboardService } from 'src/leaderboard/leaderboard.service';
 @UseGuards(JWTAuthGuard, RolesGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly leaderboardService: LeaderboardService) {}
 
   async getUserExist(id: number) {
     const user = await this.usersService.findOne(id);
@@ -75,5 +76,10 @@ export class UsersController {
     if (user) {
       return this.usersService.deleteUser(+id);
     }
+  }
+
+  @Get('/leaderboard')
+  async getLeaderboard(){
+     return await this.leaderboardService.getLeaderboard()
   }
 }

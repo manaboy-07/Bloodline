@@ -1,0 +1,101 @@
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { useRef } from 'react';
+
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export default function App() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dropletRef = useRef<HTMLDivElement>(null);
+  const rippleRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline({ repeat: -1 });
+
+    // Initial state
+    gsap.set(dropletRef.current, { 
+      y: -500, 
+      opacity: 0,
+      scale: 0.8
+    });
+    gsap.set(rippleRef.current, { 
+      scale: 0, 
+      opacity: 0,
+      borderWidth: '2px'
+    });
+
+    // Falling animation
+    tl.to(dropletRef.current, {
+      y: 0,
+      opacity: 1,
+      duration: 1.2,
+      ease: 'power2.in',
+    })
+    // Impact and disappear
+    .to(dropletRef.current, {
+      scale: 1.5,
+      opacity: 0,
+      duration: 0.1,
+      ease: 'power2.out',
+    })
+    // Ripple effect
+    .to(rippleRef.current, {
+      scale: 4,
+      opacity: 1,
+      duration: 0.1,
+    }, '-=0.1')
+    .to(rippleRef.current, {
+      scale: 15,
+      opacity: 0,
+      borderWidth: '0px',
+      duration: 1.5,
+      ease: 'power3.out',
+    }, '-=0.05')
+    // Reset droplet for next loop
+    .set(dropletRef.current, { y: -500, opacity: 0, scale: 0.8 });
+
+  }, { scope: containerRef });
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050000]"
+      id="main-container"
+    >
+      {/* Background Atmosphere */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-1/2 left-1/2 h-[50vw] w-[50vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-900/10 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 flex h-full w-full items-center justify-center">
+        {/* The Droplet */}
+        <div 
+          ref={dropletRef}
+          id="droplet"
+          className="absolute h-12 w-8"
+        >
+          <svg viewBox="0 0 30 42" className="h-full w-full fill-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+            <path d="M15 0C15 0 0 17.5 0 28.5C0 35.9558 6.71573 42 15 42C23.2843 42 30 35.9558 30 28.5C30 17.5 15 0 15 0Z" />
+            {/* Glossy Highlight */}
+            <ellipse cx="10" cy="25" rx="3" ry="6" fill="white" fillOpacity="0.2" transform="rotate(-15 10 25)" />
+          </svg>
+        </div>
+
+        {/* The Ripple */}
+        <div 
+          ref={rippleRef}
+          id="ripple"
+          className="absolute h-12 w-12 rounded-full border-[3px] border-red-500/40"
+        />
+      </div>
+
+      {/* Text hint */}
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 font-sans text-xs tracking-[0.4em] text-red-900/40 uppercase">
+        Coagulating...
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,348 @@
+improve the sidebar make the background a lower shade of dark , "use client";
+
+import Link from "next/link";
+import { useRef } from "react";
+
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+
+import {
+  IconArrowLeft,
+  IconBrandTabler,
+  IconSettings,
+  IconUserBolt,
+  IconTrophy,
+  IconBallFootball,
+} from "@tabler/icons-react";
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+
+// IMPORTANT
+gsap.registerPlugin(useGSAP);
+
+const links = [
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: IconBrandTabler,
+  },
+  {
+    title: "Predictions",
+    href: "/predictions",
+    icon: IconBallFootball,
+  },
+  {
+    title: "Leaderboard",
+    href: "/leaderboard",
+    icon: IconTrophy,
+  },
+  {
+    title: "Profile",
+    href: "/profile",
+    icon: IconUserBolt,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: IconSettings,
+  },
+];
+
+export function AppSidebar() {
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const tl = gsap.timeline({
+        defaults: {
+          ease: "power3.out",
+        },
+      });
+
+      // INITIAL STATES
+      gsap.set(".sidebar-logo", {
+        opacity: 0,
+        y: -20,
+      });
+
+      gsap.set(".sidebar-item", {
+        opacity: 0,
+        x: -25,
+      });
+
+      gsap.set(".sidebar-footer", {
+        opacity: 0,
+        y: 20,
+      });
+
+      gsap.set(".sidebar-glow", {
+        opacity: 0,
+        scale: 0.6,
+      });
+
+      // TIMELINE
+      tl.to(".sidebar-glow", {
+        opacity: 1,
+        scale: 1,
+        duration: 1.2,
+      })
+        .to(
+          ".sidebar-logo",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+          },
+          "-=0.8",
+        )
+        .to(
+          ".sidebar-item",
+          {
+            opacity: 1,
+            x: 0,
+            stagger: 0.08,
+            duration: 0.6,
+          },
+          "-=0.4",
+        )
+        .to(
+          ".sidebar-footer",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+          },
+          "-=0.3",
+        );
+
+      // HOVER ANIMATION
+      const items = gsap.utils.toArray(".sidebar-item");
+
+      items.forEach((item: any) => {
+        item.addEventListener("mouseenter", () => {
+          gsap.to(item, {
+            x: 6,
+            duration: 0.25,
+          });
+        });
+
+        item.addEventListener("mouseleave", () => {
+          gsap.to(item, {
+            x: 0,
+            duration: 0.25,
+          });
+        });
+      });
+    },
+    { scope: container },
+  );
+
+  return (
+    <Sidebar
+      ref={container}
+      className="
+        relative
+        border-r
+        border-neutral-800
+        bg-neutral-950
+        text-white
+      "
+    >
+      {/* GLOW EFFECT */}
+      <div
+        className="
+          sidebar-glow
+          absolute
+          left-[-40px]
+          top-[-20px]
+          h-48
+          w-48
+          rounded-full
+          bg-red-500/10
+          blur-3xl
+        "
+      />
+
+      <SidebarContent className="relative z-10 px-3 py-5">
+        {/* LOGO */}
+        <div
+          className="
+            sidebar-logo
+            mb-10
+            flex
+            items-center
+            gap-3
+            px-2
+          "
+        >
+          {/* ICON */}
+          <div
+            className="
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-2xl
+              bg-gradient-to-br
+              from-red-600
+              to-rose-900
+              shadow-[0_0_30px_rgba(255,0,0,0.35)]
+            "
+          >
+            🩸
+          </div>
+
+          {/* TEXT */}
+          <div>
+            <h1 className="text-lg font-black tracking-tight">Bloodline</h1>
+
+            <p className="text-xs text-neutral-500">Prediction League</p>
+          </div>
+        </div>
+
+        {/* NAVIGATION */}
+        <SidebarGroup>
+          <SidebarGroupLabel
+            className="
+              mb-3
+              px-3
+              text-xs
+              uppercase
+              tracking-[0.25em]
+              text-neutral-500
+            "
+          >
+            Navigation
+          </SidebarGroupLabel>
+
+          <SidebarMenu className="space-y-2">
+            {links.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <Link
+                    href={item.href}
+                    className="
+                      sidebar-item
+                      group
+                      flex
+                      items-center
+                      gap-3
+                      rounded-2xl
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-neutral-400
+                      transition-all
+                      duration-300
+                      hover:bg-neutral-900
+                      hover:text-white
+                    "
+                  >
+                    {/* ICON CONTAINER */}
+                    <div
+                      className="
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-neutral-900
+                        transition-all
+                        duration-300
+                        group-hover:bg-red-500/10
+                      "
+                    >
+                      <Icon
+                        className="
+                          h-5
+                          w-5
+                          transition-colors
+                          duration-300
+                          group-hover:text-red-400
+                        "
+                      />
+                    </div>
+
+                    {/* LABEL */}
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* FOOTER */}
+      <SidebarFooter className="sidebar-footer border-t border-neutral-800 p-4">
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            rounded-2xl
+            border
+            border-neutral-800
+            bg-neutral-900
+            p-3
+          "
+        >
+          {/* USER */}
+          <div className="flex items-center gap-3">
+            <img
+              src="https://assets.aceternity.com/manu.png"
+              className="
+                h-11
+                w-11
+                rounded-full
+                border
+                border-red-500/30
+                object-cover
+              "
+              alt="avatar"
+            />
+
+            <div>
+              <p className="text-sm font-semibold text-white">Manasseh</p>
+
+              <p className="text-xs text-neutral-500">Elite Predictor</p>
+            </div>
+          </div>
+
+          {/* LOGOUT */}
+          <button
+            className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-xl
+              bg-neutral-800
+              text-neutral-400
+              transition-all
+              duration-300
+              hover:bg-red-500/10
+              hover:text-red-400
+            "
+          >
+            <IconArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}

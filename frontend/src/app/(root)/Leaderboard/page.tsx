@@ -1,13 +1,12 @@
-import PlayerList from "@/components/shared/PlayerList";
 import React from "react";
+import PlayerList from "@/components/shared/PlayerList";
 
-function Leaderboard() {
+function page() {
   return (
     <>
-      <div>Leaderboard</div>
       <PlayerList isShortList={false} />
     </>
   );
 }
 
-export default Leaderboard;
+export default page;

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,7 +20,7 @@ export class UsersService {
       where: { name: roleName },
     });
     if (!role) {
-      throw new NotFoundException('Role not found');
+      throw new Error('Role not Found');
     }
 
     return await this.prisma.user.create({
@@ -44,18 +44,18 @@ export class UsersService {
   }
 
   async update(id: number, data: Prisma.UserUpdateInput): Promise<User> {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { id },
       data,
     });
   }
 
   async deleteUser(id: number): Promise<User> {
-    return this.prisma.user.delete({ where: { id } });
+    return await this.prisma.user.delete({ where: { id } });
   }
 
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany({
+    return await this.prisma.user.findMany({
       include: { role: true },
     });
   }
@@ -70,7 +70,7 @@ export class UsersService {
     club: string | null;
     createdAt: Date;
   } | null> {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
