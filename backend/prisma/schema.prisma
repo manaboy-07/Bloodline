@@ -42,7 +42,8 @@ model Match {
   matchDate    DateTime
   homeScore    Int?         
   awayScore    Int?
-  status       String       @default("upcoming") 
+  status       String       @default("upcoming")
+  isScored     Boolean      @default(false) 
   predictions  Prediction[]
   createdAt    DateTime     @default(now())
 }
