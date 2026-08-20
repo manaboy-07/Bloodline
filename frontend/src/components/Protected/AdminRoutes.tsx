@@ -14,14 +14,12 @@ export default function AdminRoute({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hasHydrated) return;
 
-    
     if (!user || !isAuthenticated) {
       router.replace("/auth");
       return;
     }
 
-   
-    const isAdmin = user.role?.name === "ADMIN" 
+    const isAdmin = user.role?.name === "ADMIN";
     if (!isAdmin) {
       router.replace("/unauthorized");
     }
@@ -38,10 +36,9 @@ export default function AdminRoute({ children }: { children: ReactNode }) {
     );
   }
 
-
   if (!user || !isAuthenticated) return null;
 
-  const isAdmin = user.role?.name === "ADMIN"
+  const isAdmin = user.role?.name === "ADMIN";
   if (!isAdmin) return null;
 
   return <>{children}</>;

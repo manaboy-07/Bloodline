@@ -1,5 +1,6 @@
 // src/components/PredictionForm.tsx
 //!This should be a component
+"use client";
 import { createPrediction } from "@/api/services/prediction";
 import React, { useState } from "react";
 
