@@ -10,6 +10,6 @@ import { CronService } from 'src/cron/cron.service';
   controllers: [PredictionController],
   providers: [PredictionService, CronService],
   exports: [PredictionService],
-  imports: [PrismaModule, UsersModule, MatchModule]
+  imports: [PrismaModule, UsersModule, MatchModule],
 })
 export class PredictionModule {}

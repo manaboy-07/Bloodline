@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { PredictionService } from 'src/prediction/prediction.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PredictionService } from '../prediction/prediction.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 // 1. Admin sets match status = finished
 // 2. Cron detects finished + not scored
