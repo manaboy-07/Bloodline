@@ -34,10 +34,9 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const router = useRouter();
 
-const updateUser = useAuthStore((state) => state.updateUser);
+  const updateUser = useAuthStore((state) => state.updateUser);
 
-
-const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -46,7 +45,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   const [club, setClub] = useState("Manchester United");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
- useEffect(() => {
+  useEffect(() => {
     resetSessionExpiredFlag();
   }, []);
   useGSAP(
@@ -112,63 +111,60 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   );
 
   const handleLogin = async () => {
-  try {
-    const [email, password] = [loginEmail, loginPassword]
-    const data = await login(email, password);
-    console.log('Login Data : ', data)
-    console.log("Logged in:", data);
+    try {
+      const [email, password] = [loginEmail, loginPassword];
+      const data = await login(email, password);
+      console.log("Login Data : ", data);
+      console.log("Logged in:", data);
 
-    
-    const profile = await profileDetail();
-    
-    updateUser(profile);
-    toast.success("Welcome back", {
-    description: `Logged in as ${profile.name}.`,
-  });
-    router.push("/");
-  } catch (err) {
-    console.log("Login failed:", err);
-  }
-};
- const handleSignup = async () => {
-  try {
-    const [email, password] = [signupEmail, signupPassword]
-    const data = await signup(email, password, name, club);
-    console.log("Signed up:", data);
+      const profile = await profileDetail();
 
-    
-    toast.success("Account created", {
-    description: "Please login to continue.",
-  });
-    setMode("login")
-  } catch (err) {
-    console.log("Sign up failed:", err);
-  }
-};
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-
- 
-  setIsSubmitting(true);
-
-  try {
-    if (mode === "login") {
-      await handleLogin();
-    } else {
-      await handleSignup();
+      updateUser(profile);
+      toast.success("Welcome back", {
+        description: `Logged in as ${profile.name}.`,
+      });
+      router.push("/");
+    } catch (err) {
+      console.log("Login failed:", err);
     }
-  } catch (err) {
-    console.log(err);
-    toast.error(mode === "login" ? "Login failed" : "Signup failed", {
-      description:
-        mode === "login"
-          ? "Please check your email and password."
-          : "Please check your details and try again.",
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
+  const handleSignup = async () => {
+    try {
+      const [email, password] = [signupEmail, signupPassword];
+      const data = await signup(email, password, name, club);
+      console.log("Signed up:", data);
+
+      toast.success("Account created", {
+        description: "Please login to continue.",
+      });
+      setMode("login");
+    } catch (err) {
+      console.log("Sign up failed:", err);
+    }
+  };
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setIsSubmitting(true);
+
+    try {
+      if (mode === "login") {
+        await handleLogin();
+      } else {
+        await handleSignup();
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error(mode === "login" ? "Login failed" : "Signup failed", {
+        description:
+          mode === "login"
+            ? "Please check your email and password."
+            : "Please check your details and try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main
@@ -265,7 +261,6 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                       <Input
                         label="Email"
                         type="email"
-                       
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                       />
@@ -281,13 +276,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                     </div>
 
                     <button
-  type="submit"
-  disabled={isSubmitting}
-  className="form-field group flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
->
-  {isSubmitting && mode === "login" ? "Logging in..." : "Login"}
-  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-</button>
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="form-field group flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmitting && mode === "login"
+                        ? "Logging in..."
+                        : "Login"}
+                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                    </button>
                   </form>
 
                   <p className="form-field mt-5 text-sm text-neutral-500">
@@ -360,14 +357,15 @@ const [isSubmitting, setIsSubmitting] = useState(false);
                     </div>
 
                     <button
-  type="submit"
-  disabled={isSubmitting}
-  className="form-field group flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
->
-  {isSubmitting && mode === "signup" ? "Creating account..." : "Create Account"}
-  <UserPlus className="h-4 w-4 transition group-hover:scale-110" />
-</button>
-                    
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="form-field group flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmitting && mode === "signup"
+                        ? "Creating account..."
+                        : "Create Account"}
+                      <UserPlus className="h-4 w-4 transition group-hover:scale-110" />
+                    </button>
                   </form>
 
                   <p className="form-field mt-5 text-sm text-neutral-500">
