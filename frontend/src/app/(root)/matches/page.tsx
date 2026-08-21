@@ -25,7 +25,6 @@ import { useMatches } from "@/hooks/useMatch";
 import { Match } from "@/types";
 import LogoTeam from "@/components/logoTeam";
 
-
 function StatusBadge({ status }: { status: Match["status"] }) {
   const cfg: Record<
     string,
@@ -60,7 +59,6 @@ function StatusBadge({ status }: { status: Match["status"] }) {
   );
 }
 
-
 function ScorePill({
   homeScore,
   awayScore,
@@ -75,7 +73,6 @@ function ScorePill({
     </span>
   );
 }
-
 
 function SkeletonCard() {
   return (
@@ -99,7 +96,6 @@ function SkeletonCard() {
   );
 }
 
-
 function FinishModal({
   match,
   onClose,
@@ -112,10 +108,10 @@ function FinishModal({
   isPending: boolean;
 }) {
   const [homeScore, setHomeScore] = useState(
-    match.homeScore?.toString() ?? "0"
+    match.homeScore?.toString() ?? "0",
   );
   const [awayScore, setAwayScore] = useState(
-    match.awayScore?.toString() ?? "0"
+    match.awayScore?.toString() ?? "0",
   );
   const backdropRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -125,12 +121,12 @@ function FinishModal({
       gsap.fromTo(
         backdropRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.2, ease: "power2.out" }
+        { opacity: 1, duration: 0.2, ease: "power2.out" },
       );
       gsap.fromTo(
         panelRef.current,
         { opacity: 0, y: 24, scale: 0.96 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: "back.out(1.6)" }
+        { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: "back.out(1.6)" },
       );
     });
     return () => ctx.revert();
@@ -231,7 +227,6 @@ function FinishModal({
   );
 }
 
-
 function MatchCard({
   match,
   updateIsPending,
@@ -290,11 +285,15 @@ function MatchCard({
 
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-xl font-black leading-none">
-              <LogoTeam teamName={match.homeTeam}/> <br />
-              {match.homeTeam}</p>
-            <ScorePill homeScore={match.homeScore || 0} awayScore={match.awayScore || 0} />
+              <LogoTeam teamName={match.homeTeam} /> <br />
+              {match.homeTeam}
+            </p>
+            <ScorePill
+              homeScore={match.homeScore || 0}
+              awayScore={match.awayScore || 0}
+            />
             <p className="text-xl font-black leading-none">
-               <LogoTeam teamName={match.awayTeam}/> <br />
+              <LogoTeam teamName={match.awayTeam} /> <br />
               {match.awayTeam}
             </p>
           </div>
@@ -305,44 +304,43 @@ function MatchCard({
         </div>
 
         {/* Actions */}
-       <div className="flex shrink-0 flex-wrap items-center gap-2">
-  <button
-    type="button"
-    disabled={updateIsPending}
-    onClick={onFinish}
-    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {updateIsPending ? (
-      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-    ) : (
-      <CheckCircle2 className="h-3.5 w-3.5" />
-    )}
-    {updateIsPending ? "Updating..." : "Finish"}
-  </button>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={updateIsPending}
+            onClick={onFinish}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {updateIsPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            )}
+            {updateIsPending ? "Updating..." : "Finish"}
+          </button>
 
-  <Link
-    href={`/Admin/predictions/${match.id}`}
-    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-300 active:scale-95"
-  >
-    <Eye className="h-3.5 w-3.5" />
-    Predictions
-  </Link>
+          <Link
+            href={`/admin/predictions/${match.id}`}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-300 active:scale-95"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Predictions
+          </Link>
 
-  <button
-    type="button"
-    disabled={deleteIsPending}
-    onClick={() => onDelete(match.id, cardRef.current)}
-    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    <Trash2 className="h-3.5 w-3.5" />
-    {deleteIsPending ? "Deleting..." : "Delete"}
-  </button>
-</div>
+          <button
+            type="button"
+            disabled={deleteIsPending}
+            onClick={() => onDelete(match.id, cardRef.current)}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {deleteIsPending ? "Deleting..." : "Delete"}
+          </button>
+        </div>
       </div>
     </article>
   );
 }
-
 
 export default function MatchesPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -365,7 +363,6 @@ export default function MatchesPage() {
   const listRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLParagraphElement>(null);
 
-  
   useEffect(() => {
     if (!hasHydrated) return;
     if (!isAuthenticated) window.location.href = "/auth";
@@ -376,44 +373,40 @@ export default function MatchesPage() {
     if (matches.length > 0) console.log("Matches fetched:", matches);
   }, [matches]);
 
-
   useEffect(() => {
     if (isLoading || !hasHydrated) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         headerRef.current,
         { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
       );
       gsap.fromTo(
         formSectionRef.current,
         { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.12 }
+        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.12 },
       );
       gsap.fromTo(
         listRef.current,
         { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.22 }
+        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.22 },
       );
     });
     return () => ctx.revert();
   }, [isLoading, hasHydrated]);
 
-  
   useEffect(() => {
     if (!counterRef.current) return;
     gsap.fromTo(
       counterRef.current,
       { scale: 1.3, color: "#ef4444" },
-      { scale: 1, color: "#ffffff", duration: 0.4, ease: "back.out(2)" }
+      { scale: 1, color: "#ffffff", duration: 0.4, ease: "back.out(2)" },
     );
   }, [matches.length]);
 
- 
   useEffect(() => {
     if (!listRef.current || isLoading) return;
-    const cards =
-      listRef.current.querySelectorAll<HTMLElement>(".match-card");
+    const cards = listRef.current.querySelectorAll<HTMLElement>(".match-card");
     gsap.fromTo(
       cards,
       { opacity: 0, y: 14 },
@@ -424,11 +417,10 @@ export default function MatchesPage() {
         ease: "power2.out",
         stagger: 0.07,
         clearProps: "all",
-      }
+      },
     );
   }, [matches, isLoading]);
 
-  
   const handleCreateMatch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -458,7 +450,7 @@ export default function MatchesPage() {
   const handleFinishMatch = async (
     match: Match,
     homeScore: number,
-    awayScore: number
+    awayScore: number,
   ) => {
     try {
       await updateMatchMutation.mutateAsync({
@@ -473,10 +465,7 @@ export default function MatchesPage() {
     }
   };
 
-  const handleDeleteMatch = async (
-    id: number,
-    cardEl: HTMLElement | null
-  ) => {
+  const handleDeleteMatch = async (id: number, cardEl: HTMLElement | null) => {
     const confirmed = confirm("Delete this match?");
     if (!confirmed) return;
 
@@ -509,7 +498,6 @@ export default function MatchesPage() {
     }
   };
 
-  
   if (!hasHydrated || isLoading) {
     return (
       <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
@@ -571,7 +559,6 @@ export default function MatchesPage() {
     <>
       <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-
           {/* Header */}
           <div ref={headerRef} style={{ opacity: 0 }}>
             <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6">
@@ -604,15 +591,12 @@ export default function MatchesPage() {
             </section>
           </div>
 
-         
           <section
             ref={formSectionRef}
             className="rounded-xl border border-neutral-800 bg-neutral-900 p-5"
             style={{ opacity: 0 }}
           >
-            <h2 className="text-lg font-black tracking-tight">
-              Create match
-            </h2>
+            <h2 className="text-lg font-black tracking-tight">Create match</h2>
 
             <form
               onSubmit={handleCreateMatch}
@@ -654,7 +638,6 @@ export default function MatchesPage() {
             </form>
           </section>
 
-        
           <div
             ref={listRef}
             className="flex flex-col gap-3"
