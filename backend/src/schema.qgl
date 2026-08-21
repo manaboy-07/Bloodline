@@ -12,7 +12,7 @@ type MatchModel {
 }
 
 type PredictionModel {
-  id: Float!
+  id: Int!
   homeScore: Int!
   awayScore: Int!
   points: Int!

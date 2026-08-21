@@ -3,7 +3,7 @@ import { MatchModel } from './matchmodel';
 
 @ObjectType()
 export class PredictionModel {
-  @Field()
+  @Field(() => Int)
   id!: number;
 
   @Field((type) => Int)
