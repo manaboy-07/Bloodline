@@ -111,36 +111,34 @@ export default function AuthPage() {
   );
 
   const handleLogin = async () => {
-    try {
-      const [email, password] = [loginEmail, loginPassword];
-      const data = await login(email, password);
-      console.log("Login Data : ", data);
-      console.log("Logged in:", data);
+    const data = await login(loginEmail, loginPassword);
 
-      const profile = await profileDetail();
+    console.log("Login successful:", data);
 
-      updateUser(profile);
-      toast.success("Welcome back", {
-        description: `Logged in as ${profile.name}.`,
-      });
-      router.push("/");
-    } catch (err) {
-      console.log("Login failed:", err);
-    }
+    const profile = await profileDetail();
+
+    console.log("Profile:", profile);
+
+    updateUser(profile);
+
+    toast.success("Welcome back", {
+      description: `Logged in as ${profile.name}.`,
+    });
+
+    router.push("/");
   };
   const handleSignup = async () => {
-    try {
-      const [email, password] = [signupEmail, signupPassword];
-      const data = await signup(email, password, name, club);
-      console.log("Signed up:", data);
+    const [email, password] = [signupEmail, signupPassword];
 
-      toast.success("Account created", {
-        description: "Please login to continue.",
-      });
-      setMode("login");
-    } catch (err) {
-      console.log("Sign up failed:", err);
-    }
+    const data = await signup(email, password, name, club);
+
+    console.log("Signed up:", data);
+
+    toast.success("Account created", {
+      description: "Please login to continue.",
+    });
+
+    setMode("login");
   };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,7 +152,8 @@ export default function AuthPage() {
         await handleSignup();
       }
     } catch (err) {
-      console.log(err);
+      console.log("Auth failed:", err);
+
       toast.error(mode === "login" ? "Login failed" : "Signup failed", {
         description:
           mode === "login"

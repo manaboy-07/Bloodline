@@ -31,6 +31,10 @@ api.interceptors.response.use(
 
     // 401 — session expired or unauthenticated
     if (status === 401) {
+      console.error("401 RESPONSE");
+      console.error("URL:", err.config?.url);
+      console.error("METHOD:", err.config?.method);
+      console.error("DATA:", err.response?.data);
       // Clear auth state first
       useAuthStore.getState().logout();
 

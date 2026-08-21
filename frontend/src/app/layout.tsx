@@ -20,7 +20,7 @@ export default function RootLayout({
         <Providers>
           {loading && <AppLoader onComplete={() => setLoading(false)} />}
           {!loading && children}
-           <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" />
         </Providers>
       </body>
     </html>
