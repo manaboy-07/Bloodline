@@ -2,8 +2,9 @@ import { Args, Int, Query, Resolver } from '@nestjs/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserModel } from '../models/usermodel';
 import { Context } from '@nestjs/graphql';
-import { GqlAuthGuard } from 'src/auth/guards/Gql-auth.guard';
+
 import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '../../auth/guards/Gql-auth.guard';
 
 @Resolver((of) => UserModel)
 export class UserResolver {

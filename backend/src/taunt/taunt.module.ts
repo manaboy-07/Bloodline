@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TauntService } from './taunt.service';
 import { TauntController } from './taunt.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   controllers: [TauntController],

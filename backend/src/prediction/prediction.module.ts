@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PredictionService } from './prediction.service';
 import { PredictionController } from './prediction.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { UsersModule } from 'src/users/users.module';
-import { MatchModule } from 'src/match/match.module';
-import { CronService } from 'src/cron/cron.service';
+import { CronService } from '../cron/cron.service';
+import { MatchModule } from '../match/match.module';
+import { UsersModule } from '../users/users.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   controllers: [PredictionController],

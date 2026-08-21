@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { CreatePredictionDto } from './dto/create-prediction.dto';
 import { UpdatePredictionDto } from './dto/update-prediction.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Match, Prediction, Prisma } from 'src/generated/prisma/client';
-import { MatchService } from 'src/match/match.service';
-import { UsersService } from 'src/users/users.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { MatchService } from '../match/match.service';
+import { UsersService } from '../users/users.service';
+import { Match, Prediction, Prisma } from '../generated/prisma/client';
 
 @Injectable()
 export class PredictionService {

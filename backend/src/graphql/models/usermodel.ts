@@ -1,19 +1,19 @@
-import { Field, Int, ObjectType } from "@nestjs/graphql";
-import { PredictionModel } from "./predictionmodel";
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { PredictionModel } from './predictionmodel';
 
 @ObjectType()
 export class UserModel {
   @Field((type) => Int)
-  id: number;
+  id!: number;
 
   @Field()
-  name: string;
+  name!: string;
 
   @Field((type) => Int)
-  points: number;
+  points!: number;
 
   @Field(() => [PredictionModel])
-  predictions: PredictionModel[];
+  predictions!: PredictionModel[];
 
-//    “When I fetch a user, I can also fetch all predictions made by that user”
+  //    “When I fetch a user, I can also fetch all predictions made by that user”
 }

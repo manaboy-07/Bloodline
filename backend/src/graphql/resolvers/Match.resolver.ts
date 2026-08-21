@@ -1,6 +1,7 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { PrismaService } from 'src/prisma/prisma.service';
+
 import { MatchModel } from '../models/matchmodel';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Resolver((of) => MatchModel)
 export class MatchResolver {

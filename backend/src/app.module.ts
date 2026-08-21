@@ -1,6 +1,5 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -8,10 +7,11 @@ import { TauntModule } from './taunt/taunt.module';
 import { PredictionModule } from './prediction/prediction.module';
 import { MatchModule } from './match/match.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CronService } from './cron/cron.service';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { CronService } from './cron/cron.service';
+import { AppService } from './app.service';
 
 @Module({
   imports: [

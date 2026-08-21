@@ -1,17 +1,17 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Prediction } from 'src/generated/prisma/client';
+// import { Prediction } from 'src/generated/prisma/client';
 import { PredictionModel } from './predictionmodel';
 
 @ObjectType()
 export class MatchModel {
   @Field()
-  id: number;
+  id!: number;
 
   @Field()
-  homeTeam: string;
+  homeTeam!: string;
 
   @Field()
-  awayTeam: string;
+  awayTeam!: string;
 
   @Field((type) => Int, { nullable: true })
   homeScore?: number;
