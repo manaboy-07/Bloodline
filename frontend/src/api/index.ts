@@ -5,12 +5,11 @@ import { baseURL } from "@/lib/baseurl";
 import { useAuthStore } from "@/store/useAuthStore";
 
 let hasShownSessionExpiredToast = false;
-
+console.log(baseURL);
 export const api = axios.create({
   baseURL,
   withCredentials: true,
 });
-
 
 api.interceptors.request.use((config) => {
   if (process.env.NODE_ENV === "development") {
@@ -24,7 +23,6 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
-
 
 api.interceptors.response.use(
   (res) => res,
@@ -77,8 +75,6 @@ const headers = {
   "X-API-Version": "1",
 };
 
-
-
 // ── Profile endpoints ──────────────────────────────────────────────────────
 
 export const getProfilesPage = async (page: number, limit: number) => {
@@ -87,12 +83,6 @@ export const getProfilesPage = async (page: number, limit: number) => {
   });
   return res.data;
 };
-
-
-
-
-
-
 
 export const getAllProfiles = async () => {
   const res = await api.get("/api/profiles", {
@@ -114,11 +104,7 @@ export const searchProfile = async (query: string) => {
 };
 
 export const login = async (email: string, password: string) => {
-  const res = await api.post(
-    "/auth/login",
-    { email, password },
-    { headers },
-  );
+  const res = await api.post("/auth/login", { email, password }, { headers });
 
   return res.data;
 };
@@ -142,4 +128,3 @@ export const signup = async (
 
   return res.data;
 };
-

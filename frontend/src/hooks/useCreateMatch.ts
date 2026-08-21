@@ -1,5 +1,5 @@
 // hooks/useCreateMatch.ts
-"use client"
+"use client";
 import { createMatch } from "@/api/services/match";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

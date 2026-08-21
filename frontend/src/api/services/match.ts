@@ -13,8 +13,6 @@ export interface UpdateMatchDto {
   status: "pending" | "live" | "finished";
 }
 
-
-
 export const getMatches = async (): Promise<Match[]> => {
   const { data } = await api.get<Match[]>("/match");
 
@@ -46,7 +44,7 @@ export const createMatch = async (payload: CreateMatchDto) => {
 // Update match
 export const updateMatch = async (
   id: number | string,
-  payload: UpdateMatchDto
+  payload: UpdateMatchDto,
 ) => {
   const { data } = await api.patch(`/match/${id}`, payload, {
     headers: {

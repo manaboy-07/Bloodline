@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { deleteMatch } from "@/api/services/match";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
