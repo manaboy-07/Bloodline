@@ -7,10 +7,9 @@ import {
 import { CreatePredictionDto } from './dto/create-prediction.dto';
 import { UpdatePredictionDto } from './dto/update-prediction.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prediction } from 'src/generated/prisma/client';
+import { Match, Prediction, Prisma } from 'src/generated/prisma/client';
 import { MatchService } from 'src/match/match.service';
 import { UsersService } from 'src/users/users.service';
-import { Match } from 'src/generated/prisma/browser';
 
 @Injectable()
 export class PredictionService {
@@ -148,9 +147,13 @@ export class PredictionService {
         include: { match: true, user: true },
       });
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new BadRequestException('You have already predicted this match');
       }
+
       throw error;
     }
   }

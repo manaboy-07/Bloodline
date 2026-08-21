@@ -6,52 +6,55 @@ import { Match, Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class MatchService {
-  constructor(private prisma: PrismaService ){}
+  constructor(private prisma: PrismaService) {}
 
   async create(createMatchDto: CreateMatchDto): Promise<Match> {
-    if(createMatchDto.awayTeam === createMatchDto.homeTeam){
-      throw new BadRequestException('Home team and away team cannot be the same')
+    if (createMatchDto.awayTeam === createMatchDto.homeTeam) {
+      throw new BadRequestException(
+        'Home team and away team cannot be the same',
+      );
     }
     return await this.prisma.match.create({
       data: {
         awayTeam: createMatchDto.awayTeam,
         homeTeam: createMatchDto.homeTeam,
-        matchDate: new Date(createMatchDto.matchDate)
+        matchDate: new Date(createMatchDto.matchDate),
       },
-      include: {predictions: true}
-    })
+      include: { predictions: true },
+    });
   }
 
   async findAll(): Promise<Match[]> {
     return await this.prisma.match.findMany({
-      include: { predictions: true}
-    })
+      include: { predictions: true },
+    });
   }
 
   async findOne(id: number) {
     return await this.prisma.match.findUnique({
-      where: {id},
+      where: { id },
       select: {
         id: true,
         awayScore: true,
         homeScore: true,
         status: true,
+        isScored: true,
         awayTeam: true,
         matchDate: true,
         homeTeam: true,
-        predictions: {select: {userId: true, matchId: true}}
-      }
-    })
+        predictions: { select: { userId: true, matchId: true } },
+      },
+    });
   }
 
   async update(id: number, data: Prisma.MatchUpdateInput): Promise<Match> {
     return await this.prisma.match.update({
-      where: {id},
-      data
-    })
+      where: { id },
+      data,
+    });
   }
 
   async deleteMatch(id: number) {
-    return await this.prisma.match.delete({where: {id}})
+    return await this.prisma.match.delete({ where: { id } });
   }
 }

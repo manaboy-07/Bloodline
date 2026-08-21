@@ -37,7 +37,5 @@ export class CronService {
     await this.predictionService.updateUserPoints();
 
     console.log('Cron completed');
-
-   
   }
 }
