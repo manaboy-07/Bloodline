@@ -17,7 +17,7 @@ import { AppService } from './app.service';
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: 'src/schema.qgl',
+      autoSchemaFile: 'src/schema.gql',
       context: ({ req }) => ({ req }),
     }),
     AuthModule,
