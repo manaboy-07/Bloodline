@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,7 +9,12 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
-import { getPredictionsByMatch, MatchPrediction } from "@/api/services/prediction";
+import {
+  getPredictionsByMatch,
+  PredictionWithMatchAndUser,
+} from "../../../../../api/services/prediction";
+
+// ...
 
 export default function AdminMatchPredictionsPage() {
   const router = useRouter();
@@ -18,7 +22,9 @@ export default function AdminMatchPredictionsPage() {
 
   const matchId = Number(params.matchId);
 
-  const [predictions, setPredictions] = useState<MatchPrediction[]>([]);
+  const [predictions, setPredictions] = useState<PredictionWithMatchAndUser[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -150,7 +156,7 @@ export default function AdminMatchPredictionsPage() {
                             year: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
+                          },
                         )}
                       </td>
                     </tr>
