@@ -1,9 +1,15 @@
+import type { ReactNode, ChangeEventHandler } from "react";
+
 export type InputProps = {
   label: string;
   type?: string;
   value: string;
   placeholder?: string;
-  onChange: (e: any) => void;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  id?: string;
+  name?: string;
+  autoComplete?: string;
+  rightElement?: ReactNode;
 };
 
 export type LeaderboardUser = {

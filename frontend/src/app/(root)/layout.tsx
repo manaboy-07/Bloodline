@@ -1,6 +1,9 @@
-// app/layout.tsx
 import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function RootLayout({
   children,
@@ -8,13 +11,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="   bg-neutral-900">
-      <body className="   bg-neutral-900">
-        <SidebarProvider>
-          <AppSidebar />
-          {children}
-        </SidebarProvider>
-      </body>
-    </html>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className="bg-neutral-950">
+        <div className="sticky top-0 z-30 flex h-12 items-center border-b border-neutral-800 bg-neutral-950 px-3">
+          <SidebarTrigger className="text-neutral-400 transition hover:text-white" />
+        </div>
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

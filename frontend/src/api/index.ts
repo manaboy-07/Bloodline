@@ -132,3 +132,8 @@ export const signup = async (
 
   return res.data;
 };
+
+export const signOut = async () => {
+  const res = await api.post("/auth/signout");
+  return res.data;
+};

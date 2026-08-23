@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import gsap from "gsap";
@@ -28,45 +28,27 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/store/useAuthStore";
+import { signOut } from "@/api";
 
 gsap.registerPlugin(useGSAP);
 
 const links = [
-  {
-    title: "Dashboard",
-    href: "/",
-    icon: IconBrandTabler,
-  },
-  {
-    title: "Matches",
-    href: "/matches",
-    icon: IconCalendarStats,
-  },
-  {
-    title: "Predictions",
-    href: "/predictions",
-    icon: IconBallFootball,
-  },
-  {
-    title: "Leaderboard",
-    href: "/leaderboard",
-    icon: IconTrophy,
-  },
-  {
-    title: "Profile",
-    href: "/profile",
-    icon: IconUserBolt,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: IconSettings,
-  },
+  { title: "Dashboard", href: "/", icon: IconBrandTabler },
+  { title: "Matches", href: "/matches", icon: IconCalendarStats },
+  { title: "Predictions", href: "/predictions", icon: IconBallFootball },
+  { title: "Leaderboard", href: "/leaderboard", icon: IconTrophy },
+  { title: "Profile", href: "/profile", icon: IconUserBolt },
+  { title: "Settings", href: "/settings", icon: IconSettings },
 ];
 
 export function AppSidebar() {
   const container = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   useGSAP(
     () => {
@@ -77,58 +59,45 @@ export function AppSidebar() {
       if (reduceMotion) return;
 
       const tl = gsap.timeline({
-        defaults: {
-          ease: "power3.out",
-          duration: 0.5,
-        },
+        defaults: { ease: "power3.out", duration: 0.5 },
       });
 
-      gsap.set(".sidebar-animate", {
-        autoAlpha: 0,
-        y: 12,
-        force3D: true,
-      });
+      gsap.set(".sidebar-animate", { autoAlpha: 0, y: 12, force3D: true });
+      gsap.set(".sidebar-nav-item", { autoAlpha: 0, x: -14, force3D: true });
 
-      gsap.set(".sidebar-nav-item", {
-        autoAlpha: 0,
-        x: -14,
-        force3D: true,
-      });
-
-      tl.to(".sidebar-animate", {
-        autoAlpha: 1,
-        y: 0,
-        stagger: 0.08,
-      }).to(
+      tl.to(".sidebar-animate", { autoAlpha: 1, y: 0, stagger: 0.08 }).to(
         ".sidebar-nav-item",
-        {
-          autoAlpha: 1,
-          x: 0,
-          stagger: 0.05,
-        },
+        { autoAlpha: 1, x: 0, stagger: 0.05 },
         "-=0.25",
       );
 
-      return () => {
-        tl.kill();
-      };
+      return () => tl.kill();
     },
     { scope: container },
   );
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("Sign out request failed:", err);
+    } finally {
+      logout();
+      router.push("/auth");
+    }
+  };
 
   return (
     <Sidebar
       ref={container}
       className="border-r border-neutral-800 bg-neutral-950 text-white"
     >
-      <div className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-red-500/10 blur-3xl" />
-
-      <SidebarContent className="relative z-10 bg-neutral-950 px-3 py-5">
+      <SidebarContent className="bg-neutral-950 px-3 py-5">
         <Link
           href="/"
           className="sidebar-animate mb-8 flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-neutral-900/70"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-rose-950 shadow-[0_0_28px_rgba(220,38,38,0.28)]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-600">
             <Flame className="h-5 w-5 text-white" />
           </div>
 
@@ -181,7 +150,7 @@ export function AppSidebar() {
                     <span className="truncate">{item.title}</span>
 
                     {isActive && (
-                      <span className="ml-auto h-2 w-2 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)]" />
+                      <span className="ml-auto h-2 w-2 rounded-full bg-red-500" />
                     )}
                   </Link>
                 </SidebarMenuItem>
@@ -196,20 +165,23 @@ export function AppSidebar() {
           <div className="flex items-center gap-3">
             <img
               src="https://assets.aceternity.com/manu.png"
-              className="h-10 w-10 shrink-0 rounded-lg border border-red-500/25 object-cover"
-              alt="Manasseh"
+              className="h-10 w-10 shrink-0 rounded-lg border border-neutral-800 object-cover"
+              alt={user?.name || "Profile"}
             />
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-white">Manasseh</p>
+              <p className="truncate text-sm font-bold text-white">
+                {user?.name ?? "Predictor"}
+              </p>
               <p className="truncate text-xs text-neutral-500">
-                Elite Predictor
+                {user?.points ?? 0} pts
               </p>
             </div>
 
             <button
               type="button"
               aria-label="Log out"
+              onClick={handleLogout}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-800 text-neutral-400 transition hover:bg-red-500/10 hover:text-red-400"
             >
               <IconArrowLeft className="h-5 w-5" />
