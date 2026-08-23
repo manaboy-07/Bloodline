@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Bell, Flame, Search } from "lucide-react";
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/store/useAuthStore";
 
 gsap.registerPlugin(useGSAP);
@@ -18,15 +17,10 @@ export default function DashboardLayout({
   const container = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
-  // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   if (!hasHydrated) {
     return <p>Loading...</p>;
   }
-  
-  // if (!isAuthenticated) {
-  //   return <p>Please login first.</p>;
-  // }
 
   useGSAP(
     () => {
@@ -52,25 +46,19 @@ export default function DashboardLayout({
   return (
     <div
       ref={container}
-      className="flex h-svh w-full min-w-0 flex-col overflow-hidden bg-neutral-950 text-white"
+      className="flex w-full min-w-0 flex-col bg-neutral-950 text-white"
     >
-      <header className="sticky top-0 z-40 flex h-20 shrink-0 items-center justify-between border-b border-neutral-800 bg-neutral-950/80 px-4 backdrop-blur-xl sm:px-6">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="topbar-item flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-red-500/30 hover:bg-neutral-800">
-            <SidebarTrigger className="h-6 w-6 text-neutral-400" />
+      <header className="sticky top-12 z-40 flex h-20 shrink-0 items-center justify-between border-b border-neutral-800 bg-neutral-950/80 px-4 backdrop-blur-xl sm:px-6">
+        <div className="topbar-item min-w-0">
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 shrink-0 text-red-500" />
+            <h1 className="truncate text-xl font-black uppercase tracking-tight">
+              Dashboard
+            </h1>
           </div>
-
-          <div className="topbar-item min-w-0">
-            <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 shrink-0 text-red-500" />
-              <h1 className="truncate text-xl font-black uppercase tracking-tight">
-                Dashboard
-              </h1>
-            </div>
-            <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-widest text-neutral-500">
-              Welcome to Bloodline
-            </p>
-          </div>
+          <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+            Welcome to Bloodline
+          </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
@@ -108,7 +96,7 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      <main className="page-content min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-neutral-950 p-4 sm:p-6">
+      <main className="page-content min-w-0 flex-1 bg-neutral-950 p-4 sm:p-6">
         {children}
       </main>
     </div>

@@ -1,15 +1,23 @@
 "use client";
 
-import Input from "@/components/shared/Input";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowRight, Flame, ShieldCheck, Trophy, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Flame,
+  ShieldCheck,
+  Trophy,
+  UserPlus,
+} from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { login, resetSessionExpiredFlag, signup } from "@/api";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { profileDetail } from "@/api/services/user";
 import { toast } from "sonner";
+import Input from "../../../components/shared/Input";
 
 gsap.registerPlugin(useGSAP);
 
@@ -27,6 +35,25 @@ const clubs = [
   "Other",
 ];
 
+function PasswordVisibilityToggle({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:text-neutral-300"
+      aria-label={visible ? "Hide password" : "Show password"}
+    >
+      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
+  );
+}
+
 export default function AuthPage() {
   const container = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -40,14 +67,18 @@ export default function AuthPage() {
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const [name, setName] = useState("");
   const [club, setClub] = useState("Manchester United");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+
   useEffect(() => {
     resetSessionExpiredFlag();
   }, []);
+
   useGSAP(
     () => {
       const reduceMotion = window.matchMedia(
@@ -111,7 +142,10 @@ export default function AuthPage() {
   );
 
   const handleLogin = async () => {
-    const data = await login(loginEmail, loginPassword);
+    const email = loginEmail.trim().toLowerCase();
+    const password = loginPassword.trim();
+
+    const data = await login(email, password);
 
     console.log("Login successful:", data);
 
@@ -127,10 +161,13 @@ export default function AuthPage() {
 
     router.push("/");
   };
-  const handleSignup = async () => {
-    const [email, password] = [signupEmail, signupPassword];
 
-    const data = await signup(email, password, name, club);
+  const handleSignup = async () => {
+    const email = signupEmail.trim().toLowerCase();
+    const password = signupPassword.trim();
+    const trimmedName = name.trim();
+
+    const data = await signup(email, password, trimmedName, club);
 
     console.log("Signed up:", data);
 
@@ -140,6 +177,7 @@ export default function AuthPage() {
 
     setMode("login");
   };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -183,13 +221,13 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <div className="mt-12 max-w-md">
+          <div className="mt-8 max-w-md sm:mt-10 lg:mt-12">
             <p className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] text-red-400">
               <Flame className="h-4 w-4" />
               Football predictions
             </p>
 
-            <h2 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+            <h2 className="mt-6 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               Predict matches and climb the table.
             </h2>
 
@@ -199,7 +237,7 @@ export default function AuthPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-3">
+          <div className="mt-8 grid gap-3 sm:mt-10">
             <Feature
               icon={Trophy}
               title="Leaderboard battles"
@@ -247,7 +285,7 @@ export default function AuthPage() {
               {mode === "login" ? (
                 <div>
                   <div className="auth-animate form-field">
-                    <h2 className="text-3xl font-black tracking-tight">
+                    <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
                       Welcome back
                     </h2>
                     <p className="mt-2 text-sm text-neutral-500">
@@ -260,6 +298,7 @@ export default function AuthPage() {
                       <Input
                         label="Email"
                         type="email"
+                        autoComplete="email"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                       />
@@ -268,9 +307,18 @@ export default function AuthPage() {
                     <div className="form-field">
                       <Input
                         label="Password"
-                        type="password"
+                        type={showLoginPassword ? "text" : "password"}
+                        autoComplete="current-password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
+                        rightElement={
+                          <PasswordVisibilityToggle
+                            visible={showLoginPassword}
+                            onToggle={() =>
+                              setShowLoginPassword((prev) => !prev)
+                            }
+                          />
+                        }
                       />
                     </div>
 
@@ -300,7 +348,7 @@ export default function AuthPage() {
               ) : (
                 <div>
                   <div className="form-field">
-                    <h2 className="text-3xl font-black tracking-tight">
+                    <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
                       Join Bloodline
                     </h2>
                     <p className="mt-2 text-sm text-neutral-500">
@@ -313,6 +361,7 @@ export default function AuthPage() {
                       <Input
                         label="Username"
                         type="text"
+                        autoComplete="username"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
@@ -341,6 +390,7 @@ export default function AuthPage() {
                       <Input
                         label="Email"
                         type="email"
+                        autoComplete="email"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
                       />
@@ -349,9 +399,18 @@ export default function AuthPage() {
                     <div className="form-field">
                       <Input
                         label="Password"
-                        type="password"
+                        type={showSignupPassword ? "text" : "password"}
+                        autoComplete="new-password"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
+                        rightElement={
+                          <PasswordVisibilityToggle
+                            visible={showSignupPassword}
+                            onToggle={() =>
+                              setShowSignupPassword((prev) => !prev)
+                            }
+                          />
+                        }
                       />
                     </div>
 

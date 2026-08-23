@@ -15,8 +15,8 @@ export default function RootLayout({
   const [loading, setLoading] = useState(true);
 
   return (
-    <html lang="en" className="   bg-neutral-900">
-      <body className="   bg-neutral-900">
+    <html lang="en" className="bg-neutral-950">
+      <body className="bg-neutral-950">
         <Providers>
           {loading && <AppLoader onComplete={() => setLoading(false)} />}
           {!loading && children}

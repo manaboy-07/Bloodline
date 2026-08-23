@@ -148,7 +148,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid min-w-0 gap-4 sm:grid-cols-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
 
