@@ -1,23 +1,11 @@
 "use client";
 
-import { FormEvent, useRef, useState, useEffect } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import {
-  AtSign,
-  Bell,
-  Check,
-  Lock,
-  Mail,
-  Save,
-  Shield,
-  UserRound,
-  AlertCircle,
-} from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Mail, Shield, UserRound, Save, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
+
 import { useAuthStore } from "@/store/useAuthStore";
 import { updateUserProfile } from "@/api/services/user";
-import { toast } from "sonner";
-gsap.registerPlugin(useGSAP);
 
 const clubs = [
   "Arsenal",
@@ -35,204 +23,167 @@ const clubs = [
   "Other",
 ];
 
-export default function Settings() {
-  const container = useRef<HTMLDivElement | null>(null);
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser); // assume you have a setter
+type ProfileForm = {
+  name: string;
+  email: string;
+  club: string;
+};
 
-  // Form state – initialised from user data
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    club: user?.club || "Other",
-    weeklySummary: true,
-    matchReminders: true,
-    publicProfile: true,
+const getInitialForm = (user: {
+  name?: string | null;
+  email?: string | null;
+  club?: string | null;
+}): ProfileForm => ({
+  name: user.name ?? "",
+  email: user.email ?? "",
+  club: user.club || "Other",
+});
+
+export default function Settings() {
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const [form, setForm] = useState<ProfileForm>({
+    name: "",
+    email: "",
+    club: "Other",
   });
 
-  // UI states
-  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset form when user changes (e.g. after login)
   useEffect(() => {
     if (user) {
-      setForm((prev) => ({
-        ...prev,
-        name: user.name || "",
-        email: user.email || "",
-        club: user.club || "Other",
-      }));
+      setForm(getInitialForm(user));
     }
   }, [user]);
 
-  useGSAP(
-    () => {
-      const reduceMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
-      if (reduceMotion) return;
-
-      const tween = gsap.fromTo(
-        ".settings-animate",
-        { autoAlpha: 0, y: 14 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.42,
-          stagger: 0.06,
-          ease: "power3.out",
-          clearProps: "opacity,visibility,transform",
-        }
-      );
-      return () => tween.kill();
-    },
-    { scope: container }
-  );
-
-  const updateField = (key: keyof typeof form, value: string | boolean) => {
-    setSaved(false);
-    setError(null);
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const resetForm = () => {
-    if (!user) return;
-    setForm({
-      name: user.name || "",
-      email: user.email || "",
-      club: user.club || "Other",
-      weeklySummary: true, // restore default or from a preferences store
-      matchReminders: true,
-      publicProfile: true,
-    });
-    setSaved(false);
-    setError(null);
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!user) return;
-
-    setLoading(true);
-    setError(null);
-    setSaved(false);
-
-    try {
-      // Prepare payload – only send fields that are updatable
-      const payload = {
-        name: form.name,
-        email: form.email,
-        club: form.club,
-        // preferences could be sent as a separate object if needed
-       
-      };
-    const  preferences = {
-          weeklySummary: form.weeklySummary,
-          matchReminders: form.matchReminders,
-          publicProfile: form.publicProfile,
-        }
-      const updatedUser = await updateUserProfile(user.id, payload);
-   
-      setUser(updatedUser);
-
-      setSaved(true);
-      toast.success("Welcome back")
-         
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center text-neutral-400">
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-neutral-500">
         Please log in to access settings.
       </div>
     );
   }
 
+  const originalForm = getInitialForm(user);
+
+  const isDirty =
+    form.name !== originalForm.name ||
+    form.email !== originalForm.email ||
+    form.club !== originalForm.club;
+
+  const updateField = (key: keyof ProfileForm, value: string) => {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+
+    setError(null);
+  };
+
+  const resetForm = () => {
+    setForm(getInitialForm(user));
+    setError(null);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!user || loading || !isDirty) return;
+
+    const name = form.name.trim();
+    const email = form.email.trim();
+
+    if (!name || !email) {
+      setError("Name and email are required.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const updatedUser = await updateUserProfile(user.id, {
+        name,
+        email,
+        club: form.club,
+      });
+
+      setUser(updatedUser);
+      setForm(getInitialForm(updatedUser));
+
+      toast.success("Profile updated successfully.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unable to update your profile. Please try again.";
+
+      setError(message);
+      toast.error("Profile update failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div
-      ref={container}
-      className="mx-4 my-2 flex w-full max-w-[1100px] flex-col gap-5 text-white"
-    >
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 text-white sm:px-6">
       {/* Header */}
-      <section className="settings-animate rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">Settings</h1>
-            <p className="mt-1 text-sm text-neutral-400">
-              Update your profile and prediction preferences.
+      <section className="border-b border-neutral-800 pb-5">
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+
+        <p className="mt-1 text-sm text-neutral-500">
+          Manage your account information.
+        </p>
+      </section>
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-6 lg:grid-cols-[1fr_280px]"
+      >
+        {/* Profile form */}
+        <section className="min-w-0">
+          <div className="mb-5">
+            <h2 className="text-base font-semibold">Profile information</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              These details are used on your Bloodline account.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {saved && (
-              <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm font-bold text-emerald-400">
-                <Check className="h-4 w-4" />
-                Saved
-              </div>
-            )}
-            {error && (
-              <div className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm font-bold text-red-400">
-                <AlertCircle className="h-4 w-4" />
-                {error}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
-        {/* Profile Details */}
-        <section className="settings-animate rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-950 text-neutral-400">
-              <UserRound className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black tracking-tight">
-                Profile Details
-              </h2>
-              <p className="text-sm text-neutral-500">
-                This is how you appear on the leaderboard.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            <Field label="Display Name" icon={UserRound}>
+          <div className="space-y-5">
+            <FormField label="Display name" icon={UserRound}>
               <input
+                type="text"
                 value={form.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                className="field-input"
+                onChange={(event) => updateField("name", event.target.value)}
                 placeholder="Your name"
+                autoComplete="name"
+                required
                 disabled={loading}
+                className="settings-input"
               />
-            </Field>
+            </FormField>
 
-            <Field label="Email Address" icon={Mail}>
+            <FormField label="Email address" icon={Mail}>
               <input
                 type="email"
                 value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                className="field-input"
-                placeholder="name@email.com"
+                onChange={(event) => updateField("email", event.target.value)}
+                placeholder="name@example.com"
+                autoComplete="email"
+                required
                 disabled={loading}
+                className="settings-input"
               />
-            </Field>
+            </FormField>
 
-            <Field label="Club Supported" icon={Shield}>
+            <FormField label="Club supported" icon={Shield}>
               <select
                 value={form.club}
-                onChange={(e) => updateField("club", e.target.value)}
-                className="field-input"
+                onChange={(event) => updateField("club", event.target.value)}
                 disabled={loading}
+                className="settings-input"
               >
                 {clubs.map((club) => (
                   <option key={club} value={club} className="bg-neutral-950">
@@ -240,96 +191,76 @@ export default function Settings() {
                   </option>
                 ))}
               </select>
-            </Field>
-          </div>
-        </section>
-
-        {/* Preferences */}
-        <section className="settings-animate rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-950 text-neutral-400">
-              <Bell className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black tracking-tight">Preferences</h2>
-              <p className="text-sm text-neutral-500">
-                Control updates and profile visibility.
-              </p>
-            </div>
+            </FormField>
           </div>
 
-          <div className="space-y-3">
-            <ToggleRow
-              title="Match reminders"
-              description="Get reminded before prediction deadlines."
-              checked={form.matchReminders}
-              onChange={(value) => updateField("matchReminders", value)}
-              disabled={loading}
-            />
-
-            <ToggleRow
-              title="Weekly summary"
-              description="Receive your points and rank movement each week."
-              checked={form.weeklySummary}
-              onChange={(value) => updateField("weeklySummary", value)}
-              disabled={loading}
-            />
-
-            <ToggleRow
-              title="Public profile"
-              description="Let other predictors view your club and stats."
-              checked={form.publicProfile}
-              onChange={(value) => updateField("publicProfile", value)}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-neutral-300">
-              <Lock className="h-4 w-4 text-neutral-500" />
-              Account note
-            </div>
-            <p className="text-sm leading-6 text-neutral-500">
-              Email changes may require verification before they appear on your
-              account.
+          {error && (
+            <p role="alert" className="mt-5 text-sm text-red-400">
+              {error}
             </p>
-          </div>
+          )}
 
-          <div className="mt-5 flex gap-3">
+          <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-neutral-800 pt-5">
             <button
               type="submit"
-              disabled={loading}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold text-white transition hover:bg-red-500 disabled:opacity-60"
+              disabled={loading || !isDirty}
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {loading ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Saving…
-                </>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Save Changes
-                </>
+                <Save size={16} />
               )}
+
+              {loading ? "Saving..." : "Save changes"}
             </button>
+
             <button
               type="button"
               onClick={resetForm}
-              disabled={loading}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-neutral-700 px-4 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800 hover:text-white disabled:opacity-60"
+              disabled={loading || !isDirty}
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-800 px-4 text-sm text-neutral-400 transition-colors hover:border-neutral-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
+              <RotateCcw size={15} />
               Reset
             </button>
           </div>
         </section>
+
+        {/* Account information */}
+        <aside className="h-fit border-t border-neutral-800 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <h2 className="text-base font-semibold">Account information</h2>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-xs text-neutral-500">Account role</p>
+              <p className="mt-1 text-sm text-neutral-200">
+                {user.role?.name ?? "Predictor"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-neutral-500">Account ID</p>
+              <p className="mt-1 break-all font-mono text-xs text-neutral-300">
+                {user.id}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 border-t border-neutral-800 pt-4">
+            <p className="text-xs leading-5 text-neutral-500">
+              Changes to your profile are saved to your account. Email changes
+              may require additional verification depending on your account
+              configuration.
+            </p>
+          </div>
+        </aside>
       </form>
     </div>
   );
 }
 
-
-function Field({
+function FormField({
   label,
   icon: Icon,
   children,
@@ -340,52 +271,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center gap-2 text-sm font-bold text-neutral-300">
-        <Icon className="h-4 w-4 text-neutral-500" />
+      <span className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-300">
+        <Icon size={16} className="text-neutral-500" />
         {label}
       </span>
+
       {children}
-    </label>
-  );
-}
-
-function ToggleRow({
-  title,
-  description,
-  checked,
-  onChange,
-  disabled = false,
-}: {
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <label
-      className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 transition ${
-        disabled ? "opacity-60" : "hover:border-neutral-700"
-      }`}
-    >
-      <span>
-        <span className="block text-sm font-bold text-white">{title}</span>
-        <span className="mt-1 block text-sm leading-5 text-neutral-500">
-          {description}
-        </span>
-      </span>
-
-      <div className="relative shrink-0">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          disabled={disabled}
-          className="peer sr-only"
-        />
-        <span className="block h-6 w-11 rounded-full bg-neutral-700 transition-colors peer-checked:bg-red-600" />
-        <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
-      </div>
     </label>
   );
 }

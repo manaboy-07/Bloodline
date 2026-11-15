@@ -1,157 +1,151 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
   Crown,
   Medal,
   ShieldCheck,
-  ChevronUp,
-  ArrowRight,
   Trophy,
+  RefreshCw,
   Mail,
-  User,
 } from "lucide-react";
-import { getLeaderboard } from "@/api/services/user";
-import { LeaderboardEntry } from "@/mockusers"; 
-const rankStyles = [
-  "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "bg-neutral-700/50 text-neutral-300 border-neutral-600/30",
-  "bg-amber-500/20 text-amber-500 border-amber-500/30",
-];
 
-const getTopThreeUsers = (users: LeaderboardEntry[]) => users.slice(0, 3);
+import { getLeaderboard } from "@/api/services/user";
+import { LeaderboardEntry } from "@/mockusers";
+
+gsap.registerPlugin(useGSAP);
 
 type LeaderboardProps = {
   isShortList: boolean;
 };
 
-// Skeleton loader component
-const SkeletonRow = () => (
-  <div className="animate-pulse grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900/50 p-3 sm:gap-4">
-    <div className="h-9 w-9 rounded-lg bg-neutral-800" />
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-lg bg-neutral-800" />
-      <div className="space-y-2">
-        <div className="h-4 w-24 rounded bg-neutral-800" />
-        <div className="h-3 w-16 rounded bg-neutral-800" />
+const rankStyles = [
+  "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
+  "border-neutral-700 bg-neutral-800 text-neutral-300",
+  "border-amber-600/30 bg-amber-500/10 text-amber-500",
+];
+
+const RankIcon = ({ position }: { position: number }) => {
+  const icons = [Crown, Medal, ShieldCheck];
+  const Icon = icons[position - 1];
+
+  if (!Icon) {
+    return (
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-950 text-xs font-semibold text-neutral-500">
+        #{position}
       </div>
+    );
+  }
+
+  return (
+    <div
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${rankStyles[position - 1]}`}
+    >
+      <Icon size={18} strokeWidth={1.8} />
     </div>
-    <div className="h-8 w-16 rounded-lg bg-neutral-800" />
-  </div>
-);
+  );
+};
+
+function SkeletonRow() {
+  return (
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-950/50 p-3">
+      <div className="h-9 w-9 animate-pulse rounded-lg bg-neutral-800" />
+
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-neutral-800" />
+
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-3.5 w-28 max-w-full animate-pulse rounded bg-neutral-800" />
+          <div className="h-3 w-20 max-w-full animate-pulse rounded bg-neutral-800" />
+        </div>
+      </div>
+
+      <div className="h-7 w-14 animate-pulse rounded-md bg-neutral-800" />
+    </div>
+  );
+}
 
 export default function PlayerList({ isShortList }: LeaderboardProps) {
   const [list, setList] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  
-  const playerslist = useMemo(() => {
-    if (isShortList) return getTopThreeUsers(list);
-    return list;
-  }, [list, isShortList]);
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getLeaderboard();
-        if (isMounted) setList(data);
-      } catch (err) {
-        if (isMounted) {
-          setError("Couldn't load leaderboard. Please refresh.");
-          console.error(err);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => { isMounted = false; };
+      const data = await getLeaderboard();
+      setList(data);
+    } catch {
+      setError("Unable to load the leaderboard. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  const players = isShortList ? list.slice(0, 3) : list;
+
   useGSAP(
     () => {
-      const reduceMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
+      if (loading || error) return;
 
-      if (reduceMotion) {
-        gsap.set(".leaderboard-item", { autoAlpha: 1, y: 0 });
+      const items = gsap.utils.toArray<HTMLElement>(".leaderboard-item");
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         return;
       }
 
-      const tl = gsap.fromTo(
-        ".leaderboard-item",
-        { autoAlpha: 0, y: 20 },
+      gsap.fromTo(
+        items,
+        { autoAlpha: 0, y: 8 },
         {
           autoAlpha: 1,
           y: 0,
-          duration: 0.5,
-          ease: "power3.out",
-          stagger: {
-            each: isShortList ? 0.08 : 0.04,
-            amount: isShortList ? 0.25 : 0.5,
-          },
-          clearProps: "opacity,transform",
-        }
+          duration: 0.35,
+          stagger: 0.045,
+          ease: "power2.out",
+          clearProps: "all",
+        },
       );
-
-      return () => tl.kill();
     },
-    { scope: containerRef, dependencies: [playerslist, isShortList] }
+    {
+      scope: containerRef,
+      dependencies: [players, loading, error],
+      revertOnUpdate: true,
+    },
   );
 
-  const getRankIcon = useCallback((position: number) => {
-    const icons = [Crown, Medal, ShieldCheck];
-    if (position <= 3) {
-      const Icon = icons[position - 1];
-      return (
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${rankStyles[position - 1]} shadow-lg`}
-        >
-          <Icon className="h-[20px] w-[20px]" />
-        </div>
-      );
-    }
-    return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-800/60 text-sm font-black text-neutral-400 border border-neutral-700/50">
-        #{position}
-      </div>
-    );
-  }, []);
-
-  // Loading state with skeletons
   if (loading) {
     return (
       <div
-        ref={containerRef}
-        className={isShortList ? "w-full" : "w-full rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5"}
+        className={
+          isShortList
+            ? "w-full space-y-3"
+            : "w-full rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5"
+        }
       >
         {!isShortList && (
-          <div className="mb-5 flex items-center justify-between border-b border-neutral-800 pb-5">
-            <div className="flex items-center gap-3">
-              <div className="h-11 w-11 animate-pulse rounded-xl bg-neutral-800" />
-              <div>
-                <div className="h-6 w-40 animate-pulse rounded bg-neutral-800" />
-                <div className="mt-1 h-4 w-32 animate-pulse rounded bg-neutral-800" />
-              </div>
+          <div className="mb-5 flex items-center gap-3 border-b border-neutral-800 pb-4">
+            <div className="h-10 w-10 animate-pulse rounded-lg bg-neutral-800" />
+            <div className="space-y-2">
+              <div className="h-5 w-36 animate-pulse rounded bg-neutral-800" />
+              <div className="h-3 w-28 animate-pulse rounded bg-neutral-800" />
             </div>
-            <div className="h-10 w-28 animate-pulse rounded-lg bg-neutral-800" />
           </div>
         )}
-        <div className="space-y-3">
-          {[...Array(isShortList ? 3 : 6)].map((_, i) => (
-            <SkeletonRow key={i} />
+
+        <div className="space-y-2">
+          {Array.from({ length: isShortList ? 3 : 6 }).map((_, index) => (
+            <SkeletonRow key={index} />
           ))}
         </div>
       </div>
@@ -160,13 +154,16 @@ export default function PlayerList({ isShortList }: LeaderboardProps) {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center text-red-400 backdrop-blur-sm">
-        <p className="font-medium">{error}</p>
+      <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-10 text-center">
+        <p className="text-sm text-neutral-400">{error}</p>
+
         <button
-          onClick={() => window.location.reload()}
-          className="mt-3 inline-block rounded-lg bg-red-500/20 px-4 py-2 text-sm font-bold hover:bg-red-500/30 transition"
+          type="button"
+          onClick={fetchLeaderboard}
+          className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
         >
-          Retry
+          <RefreshCw size={14} />
+          Try again
         </button>
       </div>
     );
@@ -178,117 +175,108 @@ export default function PlayerList({ isShortList }: LeaderboardProps) {
       className={
         isShortList
           ? "w-full min-w-0"
-          : "w-full min-w-0 rounded-2xl border border-neutral-800/80 bg-gradient-to-br from-neutral-900/90 to-neutral-950/90 p-4 shadow-2xl backdrop-blur-sm sm:p-5"
+          : "w-full min-w-0 rounded-xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5"
       }
     >
-      {/* Header for full list */}
       {!isShortList && (
-        <div className="leaderboard-item mb-6 flex flex-col gap-3 border-b border-neutral-800/60 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-3 border-b border-neutral-800 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-rose-600/20 text-red-400 shadow-lg shadow-red-500/10">
-              <Trophy className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-950 text-red-400">
+              <Trophy size={19} />
             </div>
+
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-white">
+              <h2 className="text-xl font-bold tracking-tight text-white">
                 Leaderboard
-              </h1>
-              <p className="text-sm text-neutral-400">
-                Top predictors for this week
+              </h2>
+              <p className="text-xs text-neutral-500">
+                Top predictors this week
               </p>
             </div>
           </div>
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-400 shadow-lg shadow-emerald-500/5">
-            <ChevronUp className="h-4 w-4" />
-            Competitive
-          </div>
+
+          <span className="w-fit rounded-md border border-neutral-800 bg-neutral-950 px-3 py-1.5 text-xs font-medium text-neutral-400">
+            {list.length} {list.length === 1 ? "predictor" : "predictors"}
+          </span>
         </div>
       )}
 
-      {/* Player list */}
-      <div className={isShortList ? "space-y-3" : "space-y-2.5"}>
-        {playerslist.map((user, idx) => {
-          const position = idx + 1;
-          const isTop = position <= 3;
+      {players.length === 0 ? (
+        <div className="rounded-lg border border-neutral-800 bg-neutral-950/50 px-4 py-10 text-center">
+          <Trophy className="mx-auto mb-3 text-neutral-600" size={24} />
+          <p className="text-sm font-medium text-neutral-300">
+            No rankings yet
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">
+            Players will appear here once they start earning points.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {players.map((user, index) => {
+            const position = index + 1;
+            const isTopThree = position <= 3;
 
-          return (
-            <div
-              key={user.id || user.email}
-              className={`
-                leaderboard-item group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 
-                rounded-xl border transition-all duration-200 
-                ${isTop 
-                  ? "border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 to-transparent hover:border-yellow-500/40" 
-                  : "border-neutral-800/60 bg-neutral-950/40 hover:border-red-500/30 hover:bg-neutral-950/70"
-                }
-                ${isShortList ? "p-3 sm:p-4" : "p-3"}
-                hover:-translate-y-0.5 hover:shadow-xl
-              `}
-            >
-              {getRankIcon(position)}
+            return (
+              <div
+                key={user.id || user.email}
+                className="leaderboard-item grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-950/50 p-3 transition-colors duration-200 hover:border-neutral-700 hover:bg-neutral-950"
+              >
+                <RankIcon position={position} />
 
-              <div className="flex min-w-0 items-center gap-3">
-                {/* Avatar with gradient */}
-                <div
-                  className={`
-                    flex h-10 w-10 shrink-0 items-center justify-center rounded-lg 
-                    bg-gradient-to-br from-red-500 to-rose-700 text-sm font-black text-white 
-                    shadow-lg shadow-red-500/20
-                    ${isTop ? "ring-2 ring-yellow-500/40 ring-offset-1 ring-offset-neutral-950" : ""}
-                  `}
-                >
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-bold ${
+                      isTopThree
+                        ? "border-neutral-700 bg-neutral-800 text-white"
+                        : "border-neutral-800 bg-neutral-900 text-neutral-400"
+                    }`}
+                  >
+                    {user.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
 
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-white group-hover:text-red-300 transition">
-                    {user.name}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-400">
-                    <span className="truncate">{user.club || "Independent"}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-neutral-600 sm:block" />
-                    <span className="hidden sm:inline">Elite Predictor</span>
-                    {/* Email – shown on hover or always as subtle */}
-                    <span className="inline-flex items-center gap-1 text-neutral-500">
-                      <Mail className="h-3 w-3" />
-                      <span className="truncate max-w-[100px] sm:max-w-[150px]">
-                        {user.email}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {user.name}
+                    </p>
+
+                    <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-neutral-500">
+                      <span className="truncate">
+                        {user.club || "Independent"}
                       </span>
-                    </span>
+
+                      {user.email && (
+                        <>
+                          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+                          <span className="hidden min-w-0 items-center gap-1 truncate sm:flex">
+                            <Mail size={11} className="shrink-0" />
+                            <span className="truncate">{user.email}</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex shrink-0 items-center gap-2">
                 <span
-                  className={`
-                    rounded-lg px-2.5 py-1.5 text-xs font-black 
-                    ${isTop 
-                      ? "bg-yellow-500/20 text-yellow-400" 
-                      : "bg-red-500/10 text-red-400"
-                    }
-                    sm:px-3
-                  `}
+                  className={`whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-semibold ${
+                    isTopThree
+                      ? "bg-yellow-500/10 text-yellow-400"
+                      : "bg-neutral-800 text-neutral-300"
+                  }`}
                 >
                   {user.points} pts
                 </span>
-                <ArrowRight
-                  className={`
-                    hidden h-4 w-4 transition group-hover:translate-x-0.5 
-                    ${isTop ? "text-yellow-500/50 group-hover:text-yellow-400" : "text-neutral-600 group-hover:text-red-400"}
-                    sm:block
-                  `}
-                />
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Footer for full list */}
-      {!isShortList && (
-        <div className="leaderboard-item mt-5 flex items-center justify-between gap-3 rounded-xl border border-neutral-800/60 bg-neutral-950/60 px-4 py-3 text-sm backdrop-blur-sm">
-          <span className="font-bold text-neutral-300">
-            {playerslist.length} predictors ranked
+      {!isShortList && players.length > 0 && (
+        <div className="mt-4 flex items-center justify-between border-t border-neutral-800 pt-4 text-xs">
+          <span className="text-neutral-400">
+            {players.length} players ranked
           </span>
           <span className="text-neutral-500">Updated weekly</span>
         </div>

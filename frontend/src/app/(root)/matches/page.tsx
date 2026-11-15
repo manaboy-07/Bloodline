@@ -2,16 +2,17 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   CalendarDays,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Loader2,
   Plus,
   ShieldAlert,
   Trash2,
   Trophy,
-  Loader2,
-  CheckCircle2,
-  Clock,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,33 +26,41 @@ import { useMatches } from "@/hooks/useMatch";
 import { Match } from "@/types";
 import LogoTeam from "@/components/logoTeam";
 
+/* -------------------------------------------------------------------------- */
+/*                                Status badge                                */
+/* -------------------------------------------------------------------------- */
+
 function StatusBadge({ status }: { status: Match["status"] }) {
-  const cfg: Record<
+  const config: Record<
     string,
-    { icon: React.ReactNode; label: string; className: string }
+    {
+      icon: React.ReactNode;
+      label: string;
+      className: string;
+    }
   > = {
     scheduled: {
-      icon: <Clock className="h-3 w-3" />,
+      icon: <Clock className="h-3.5 w-3.5" />,
       label: "Scheduled",
-      className: "border-blue-500/20 bg-blue-500/10 text-blue-400",
+      className: "border-neutral-700 bg-neutral-800 text-neutral-300",
     },
     live: {
-      icon: <Zap className="h-3 w-3 animate-pulse" />,
+      icon: <Zap className="h-3.5 w-3.5" />,
       label: "Live",
       className: "border-green-500/20 bg-green-500/10 text-green-400",
     },
     finished: {
-      icon: <CheckCircle2 className="h-3 w-3" />,
+      icon: <CheckCircle2 className="h-3.5 w-3.5" />,
       label: "Full Time",
       className: "border-red-500/20 bg-red-500/10 text-red-400",
     },
   };
 
-  const { icon, label, className } = cfg[status] ?? cfg.scheduled;
+  const { icon, label, className } = config[status] ?? config.scheduled;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${className}`}
     >
       {icon}
       {label}
@@ -59,42 +68,70 @@ function StatusBadge({ status }: { status: Match["status"] }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 Score pill                                 */
+/* -------------------------------------------------------------------------- */
+
 function ScorePill({
   homeScore,
   awayScore,
 }: {
-  homeScore?: number;
-  awayScore?: number;
+  homeScore?: number | null;
+  awayScore?: number | null;
 }) {
-  const hasScore = homeScore !== undefined && awayScore !== undefined;
+  const hasScore =
+    homeScore !== undefined &&
+    homeScore !== null &&
+    awayScore !== undefined &&
+    awayScore !== null;
+
   return (
-    <span className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-1 text-sm font-black tabular-nums text-red-400">
-      {hasScore ? `${homeScore} : ${awayScore}` : "– : –"}
+    <span className="inline-flex min-w-[76px] items-center justify-center rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm font-bold tabular-nums text-white">
+      {hasScore ? (
+        <>
+          <span>{homeScore}</span>
+          <span className="mx-2 text-neutral-600">:</span>
+          <span>{awayScore}</span>
+        </>
+      ) : (
+        <span className="text-neutral-600">– : –</span>
+      )}
     </span>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                Skeleton card                               */
+/* -------------------------------------------------------------------------- */
 
 function SkeletonCard() {
   return (
     <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-3">
+        <div className="space-y-3">
           <div className="h-3 w-32 animate-pulse rounded bg-neutral-800" />
+
           <div className="flex items-center gap-3">
             <div className="h-6 w-28 animate-pulse rounded bg-neutral-800" />
-            <div className="h-7 w-16 animate-pulse rounded-lg bg-neutral-800" />
+            <div className="h-8 w-20 animate-pulse rounded bg-neutral-800" />
             <div className="h-6 w-28 animate-pulse rounded bg-neutral-800" />
           </div>
-          <div className="h-6 w-20 animate-pulse rounded-lg bg-neutral-800" />
+
+          <div className="h-6 w-20 animate-pulse rounded bg-neutral-800" />
         </div>
+
         <div className="flex gap-2">
-          <div className="h-10 w-20 animate-pulse rounded-lg bg-neutral-800" />
-          <div className="h-10 w-20 animate-pulse rounded-lg bg-neutral-800" />
+          <div className="h-10 w-24 animate-pulse rounded-lg bg-neutral-800" />
+          <div className="h-10 w-24 animate-pulse rounded-lg bg-neutral-800" />
         </div>
       </div>
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                Finish modal                                */
+/* -------------------------------------------------------------------------- */
 
 function FinishModal({
   match,
@@ -110,93 +147,145 @@ function FinishModal({
   const [homeScore, setHomeScore] = useState(
     match.homeScore?.toString() ?? "0",
   );
+
   const [awayScore, setAwayScore] = useState(
     match.awayScore?.toString() ?? "0",
   );
+
   const backdropRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const homeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        backdropRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.2, ease: "power2.out" },
-      );
-      gsap.fromTo(
-        panelRef.current,
-        { opacity: 0, y: 24, scale: 0.96 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: "back.out(1.6)" },
-      );
-    });
-    return () => ctx.revert();
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (!reduceMotion) {
+      const ctx = gsap.context(() => {
+        gsap.fromTo(
+          backdropRef.current,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.18,
+            ease: "power2.out",
+          },
+        );
+
+        gsap.fromTo(
+          panelRef.current,
+          { opacity: 0, y: 12 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.22,
+            ease: "power2.out",
+          },
+        );
+      });
+
+      return () => ctx.revert();
+    }
   }, []);
 
-  const handleClose = () => {
-    gsap.to(panelRef.current, {
-      opacity: 0,
-      y: 16,
-      scale: 0.97,
-      duration: 0.18,
-      ease: "power2.in",
-      onComplete: onClose,
-    });
-  };
+  useEffect(() => {
+    homeInputRef.current?.focus();
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const h = Number(homeScore);
-    const a = Number(awayScore);
-    if (Number.isNaN(h) || Number.isNaN(a)) {
-      toast.error("Scores must be valid numbers");
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPending, onClose]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const home = Number(homeScore);
+    const away = Number(awayScore);
+
+    if (
+      !Number.isInteger(home) ||
+      !Number.isInteger(away) ||
+      home < 0 ||
+      away < 0
+    ) {
+      toast.error("Enter valid non-negative whole-number scores");
       return;
     }
-    onConfirm(h, a);
+
+    onConfirm(home, away);
   };
 
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={handleClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      onClick={() => {
+        if (!isPending) onClose();
+      }}
     >
       <div
         ref={panelRef}
-        className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="finish-modal-title"
+        className="w-full max-w-sm rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6"
+        onClick={(event) => event.stopPropagation()}
       >
-        <h2 className="text-lg font-black tracking-tight text-white">
-          Record result
-        </h2>
-        <p className="mt-1 text-sm text-neutral-400">
-          {match.homeTeam} vs {match.awayTeam}
-        </p>
+        <div className="mb-5">
+          <h2 id="finish-modal-title" className="text-lg font-bold text-white">
+            Record result
+          </h2>
 
-        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+          <p className="mt-1 text-sm text-neutral-400">
+            {match.homeTeam} vs {match.awayTeam}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-            <label className="flex flex-col gap-1.5">
-              <span className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+            <label className="min-w-0 space-y-2">
+              <span className="block truncate text-xs font-medium text-neutral-400">
                 {match.homeTeam}
               </span>
+
               <input
+                ref={homeInputRef}
                 type="number"
                 min={0}
+                step={1}
+                required
                 value={homeScore}
-                onChange={(e) => setHomeScore(e.target.value)}
-                className="h-14 rounded-lg border border-neutral-700 bg-neutral-950 text-center text-2xl font-black text-white outline-none transition focus:border-red-500/60 focus:ring-2 focus:ring-red-500/20"
+                onChange={(event) => setHomeScore(event.target.value)}
+                disabled={isPending}
+                className="h-14 w-full rounded-lg border border-neutral-700 bg-neutral-950 text-center text-2xl font-bold text-white outline-none transition focus:border-red-500 disabled:opacity-50"
               />
             </label>
-            <span className="pb-3 text-xl font-black text-neutral-600">—</span>
-            <label className="flex flex-col gap-1.5">
-              <span className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+
+            <span className="pb-3 text-lg font-bold text-neutral-600">:</span>
+
+            <label className="min-w-0 space-y-2">
+              <span className="block truncate text-xs font-medium text-neutral-400">
                 {match.awayTeam}
               </span>
+
               <input
                 type="number"
                 min={0}
+                step={1}
+                required
                 value={awayScore}
-                onChange={(e) => setAwayScore(e.target.value)}
-                className="h-14 rounded-lg border border-neutral-700 bg-neutral-950 text-center text-2xl font-black text-white outline-none transition focus:border-red-500/60 focus:ring-2 focus:ring-red-500/20"
+                onChange={(event) => setAwayScore(event.target.value)}
+                disabled={isPending}
+                className="h-14 w-full rounded-lg border border-neutral-700 bg-neutral-950 text-center text-2xl font-bold text-white outline-none transition focus:border-red-500 disabled:opacity-50"
               />
             </label>
           </div>
@@ -204,18 +293,23 @@ function FinishModal({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleClose}
-              className="h-11 flex-1 rounded-lg border border-neutral-700 bg-transparent text-sm font-bold text-neutral-300 transition hover:border-neutral-600 hover:bg-neutral-800"
+              onClick={onClose}
+              disabled={isPending}
+              className="h-11 flex-1 rounded-lg border border-neutral-700 text-sm font-semibold text-neutral-300 transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
               ) : (
                 "Save result"
               )}
@@ -226,6 +320,10 @@ function FinishModal({
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                 Match card                                 */
+/* -------------------------------------------------------------------------- */
 
 function MatchCard({
   match,
@@ -238,102 +336,94 @@ function MatchCard({
   updateIsPending: boolean;
   deleteIsPending: boolean;
   onFinish: () => void;
-  onDelete: (id: number, el: HTMLElement | null) => void;
+  onDelete: (id: number) => void;
 }) {
-  const cardRef = useRef<HTMLElement>(null);
+  const matchDate = new Date(match.matchDate);
 
-  const handleMouseEnter = () => {
-    gsap.to(cardRef.current, {
-      y: -2,
-      borderColor: "rgba(255,255,255,0.1)",
-      duration: 0.2,
-      ease: "power2.out",
-    });
-  };
-
-  const handleMouseLeave = () => {
-    gsap.to(cardRef.current, {
-      y: 0,
-      borderColor: "rgba(255,255,255,0.06)",
-      duration: 0.2,
-      ease: "power2.out",
-    });
-  };
+  const formattedDate = Number.isNaN(matchDate.getTime())
+    ? "Date unavailable"
+    : matchDate.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
   return (
-    <article
-      ref={cardRef}
-      className="match-card rounded-xl border border-neutral-800 bg-neutral-900 p-5"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* Info */}
+    <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-colors hover:border-neutral-700">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-neutral-500">
+          <div className="mb-4 flex items-center gap-2 text-xs text-neutral-500">
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-            <time dateTime={match.matchDate}>
-              {new Date(match.matchDate).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </time>
+
+            <time dateTime={match.matchDate}>{formattedDate}</time>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xl font-black leading-none">
-              <LogoTeam teamName={match.homeTeam} /> <br />
-              {match.homeTeam}
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <LogoTeam teamName={match.homeTeam} />
+
+              <span className="text-sm font-semibold text-white sm:text-base">
+                {match.homeTeam}
+              </span>
+            </div>
+
             <ScorePill
-              homeScore={match.homeScore || 0}
-              awayScore={match.awayScore || 0}
+              homeScore={match.homeScore}
+              awayScore={match.awayScore}
             />
-            <p className="text-xl font-black leading-none">
-              <LogoTeam teamName={match.awayTeam} /> <br />
-              {match.awayTeam}
-            </p>
+
+            <div className="flex min-w-0 items-center gap-2">
+              <LogoTeam teamName={match.awayTeam} />
+
+              <span className="text-sm font-semibold text-white sm:text-base">
+                {match.awayTeam}
+              </span>
+            </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-4">
             <StatusBadge status={match.status} />
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={updateIsPending}
             onClick={onFinish}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-red-600 px-3.5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {updateIsPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <CheckCircle2 className="h-3.5 w-3.5" />
+              <CheckCircle2 className="h-4 w-4" />
             )}
+
             {updateIsPending ? "Updating..." : "Finish"}
           </button>
 
           <Link
             href={`/admin/predictions/${match.id}`}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-300 active:scale-95"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-950 px-3.5 text-sm font-medium text-neutral-300 transition hover:border-neutral-600 hover:text-white"
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-4 w-4" />
             Predictions
           </Link>
 
           <button
             type="button"
             disabled={deleteIsPending}
-            onClick={() => onDelete(match.id, cardRef.current)}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-4 text-sm font-bold text-neutral-300 transition hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => onDelete(match.id)}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-950 px-3.5 text-sm font-medium text-neutral-400 transition hover:border-red-500/40 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            {deleteIsPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+
             {deleteIsPending ? "Deleting..." : "Delete"}
           </button>
         </div>
@@ -342,8 +432,52 @@ function MatchCard({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                Loading page                                */
+/* -------------------------------------------------------------------------- */
+
+function MatchesSkeleton() {
+  return (
+    <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
+      <div className="mx-auto w-full max-w-5xl space-y-4">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-4 w-24 animate-pulse rounded bg-neutral-800" />
+            <div className="h-8 w-48 animate-pulse rounded bg-neutral-800" />
+            <div className="h-4 w-64 max-w-full animate-pulse rounded bg-neutral-800" />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+          <div className="h-6 w-32 animate-pulse rounded bg-neutral-800" />
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-12 animate-pulse rounded-lg bg-neutral-800"
+              />
+            ))}
+          </div>
+        </div>
+
+        {Array.from({ length: 3 }).map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               Matches page                                 */
+/* -------------------------------------------------------------------------- */
+
 export default function MatchesPage() {
+  const router = useRouter();
+
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const [homeTeam, setHomeTeam] = useState("");
@@ -357,83 +491,70 @@ export default function MatchesPage() {
   const updateMatchMutation = useUpdateMatch();
   const deleteMatchMutation = useDeleteMatch();
 
-  // GSAP refs
-  const headerRef = useRef<HTMLDivElement>(null);
-  const formSectionRef = useRef<HTMLElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  const counterRef = useRef<HTMLParagraphElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  /* -------------------------- Authentication -------------------------- */
 
   useEffect(() => {
-    if (!hasHydrated) return;
-    if (!isAuthenticated) window.location.href = "/auth";
-  }, [hasHydrated, isAuthenticated]);
+    if (hasHydrated && !isAuthenticated) {
+      router.replace("/auth");
+    }
+  }, [hasHydrated, isAuthenticated, router]);
 
-  // Debug
-  useEffect(() => {
-    if (matches.length > 0) console.log("Matches fetched:", matches);
-  }, [matches]);
+  /* --------------------------- Page entrance --------------------------- */
 
   useEffect(() => {
-    if (isLoading || !hasHydrated) return;
+    if (!hasHydrated || !isAuthenticated || isLoading) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduceMotion || !pageRef.current) return;
+
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        headerRef.current,
-        { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+        ".page-intro",
+        { opacity: 0, y: 10 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          stagger: 0.08,
+          ease: "power2.out",
+          clearProps: "all",
+        },
       );
-      gsap.fromTo(
-        formSectionRef.current,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.12 },
-      );
-      gsap.fromTo(
-        listRef.current,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: 0.22 },
-      );
-    });
+    }, pageRef);
+
     return () => ctx.revert();
-  }, [isLoading, hasHydrated]);
+  }, [hasHydrated, isAuthenticated, isLoading]);
 
-  useEffect(() => {
-    if (!counterRef.current) return;
-    gsap.fromTo(
-      counterRef.current,
-      { scale: 1.3, color: "#ef4444" },
-      { scale: 1, color: "#ffffff", duration: 0.4, ease: "back.out(2)" },
-    );
-  }, [matches.length]);
-
-  useEffect(() => {
-    if (!listRef.current || isLoading) return;
-    const cards = listRef.current.querySelectorAll<HTMLElement>(".match-card");
-    gsap.fromTo(
-      cards,
-      { opacity: 0, y: 14 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.35,
-        ease: "power2.out",
-        stagger: 0.07,
-        clearProps: "all",
-      },
-    );
-  }, [matches, isLoading]);
+  /* ---------------------------- Create match --------------------------- */
 
   const handleCreateMatch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!homeTeam || !awayTeam || !matchDate) {
+    const home = homeTeam.trim();
+    const away = awayTeam.trim();
+
+    if (!home || !away || !matchDate) {
       toast.error("Please fill all match fields");
+      return;
+    }
+
+    const parsedDate = new Date(matchDate);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      toast.error("Please enter a valid match date");
       return;
     }
 
     try {
       await createMatchMutation.mutateAsync({
-        homeTeam,
-        awayTeam,
-        matchDate: new Date(matchDate).toISOString(),
+        homeTeam: home,
+        awayTeam: away,
+        matchDate: parsedDate.toISOString(),
       });
 
       setHomeTeam("");
@@ -441,11 +562,12 @@ export default function MatchesPage() {
       setMatchDate("");
 
       toast.success("Match created");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Could not create match");
     }
   };
+
+  /* ---------------------------- Finish match --------------------------- */
 
   const handleFinishMatch = async (
     match: Match,
@@ -455,96 +577,57 @@ export default function MatchesPage() {
     try {
       await updateMatchMutation.mutateAsync({
         id: match.id,
-        payload: { homeScore, awayScore, status: "finished" },
+        payload: {
+          homeScore,
+          awayScore,
+          status: "finished",
+        },
       });
+
       setFinishTarget(null);
-      toast.success("Match updated");
-    } catch (error) {
-      console.error(error);
+      toast.success("Match result updated");
+    } catch {
       toast.error("Could not update match");
     }
   };
 
-  const handleDeleteMatch = async (id: number, cardEl: HTMLElement | null) => {
-    const confirmed = confirm("Delete this match?");
-    if (!confirmed) return;
+  /* ---------------------------- Delete match --------------------------- */
 
-    if (cardEl) {
-      await gsap.to(cardEl, {
-        opacity: 0,
-        x: -20,
-        height: 0,
-        paddingTop: 0,
-        paddingBottom: 0,
-        marginBottom: 0,
-        duration: 0.28,
-        ease: "power2.in",
-      });
-    }
+  const handleDeleteMatch = async (id: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this match?",
+    );
+
+    if (!confirmed) return;
 
     try {
       await deleteMatchMutation.mutateAsync(id);
       toast.success("Match deleted");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Could not delete match");
-      if (cardEl)
-        gsap.to(cardEl, {
-          opacity: 1,
-          x: 0,
-          height: "auto",
-          duration: 0.2,
-        });
     }
   };
 
-  if (!hasHydrated || isLoading) {
-    return (
-      <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-4">
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
-                <div className="h-5 w-24 animate-pulse rounded-lg bg-neutral-800" />
-                <div className="h-8 w-48 animate-pulse rounded-lg bg-neutral-800" />
-                <div className="h-4 w-64 animate-pulse rounded bg-neutral-800" />
-              </div>
-              <div className="h-16 w-28 animate-pulse rounded-xl bg-neutral-800" />
-            </div>
-          </div>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-            <div className="h-6 w-32 animate-pulse rounded bg-neutral-800" />
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-12 animate-pulse rounded-lg bg-neutral-800"
-                />
-              ))}
-            </div>
-          </div>
-          {[...Array(3)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </main>
-    );
+  /* ------------------------------ UI states ---------------------------- */
+
+  if (!hasHydrated || !isAuthenticated || isLoading) {
+    return <MatchesSkeleton />;
   }
 
-  // Error state
   if (error) {
-    console.log(error);
     return (
       <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
-        <div className="mx-auto w-full max-w-5xl">
-          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-xl border border-red-500/20 bg-neutral-900 p-6">
             <div className="flex items-start gap-3">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+
               <div>
-                <p className="font-black text-red-400">
+                <p className="font-semibold text-white">
                   Failed to load matches
                 </p>
-                <p className="mt-1 text-sm text-red-400/70">
+
+                <p className="mt-1 text-sm text-neutral-400">
                   Check your connection and try again.
                 </p>
               </div>
@@ -558,45 +641,51 @@ export default function MatchesPage() {
   return (
     <>
       <main className="min-h-svh w-full bg-neutral-950 p-4 text-white sm:p-6">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+        <div
+          ref={pageRef}
+          className="mx-auto flex w-full max-w-5xl flex-col gap-5"
+        >
           {/* Header */}
-          <div ref={headerRef} style={{ opacity: 0 }}>
-            <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-red-400">
-                    <Trophy className="h-3.5 w-3.5" />
-                    Match Admin
-                  </div>
-                  <h1 className="text-3xl font-black tracking-tight">
-                    Manage Matches
-                  </h1>
-                  <p className="mt-2 text-sm text-neutral-400">
-                    Create fixtures, update scores, and close finished games.
-                  </p>
+
+          <section className="page-intro rounded-xl border border-neutral-800 bg-neutral-900 p-5 sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-red-400">
+                  <Trophy className="h-4 w-4" />
+                  Match administration
                 </div>
 
-                <div className="shrink-0 rounded-xl border border-neutral-800 bg-neutral-950 px-5 py-4 text-center">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">
-                    Total matches
-                  </p>
-                  <p
-                    ref={counterRef}
-                    className="mt-1 text-3xl font-black tabular-nums text-white"
-                  >
-                    {matches.length}
-                  </p>
-                </div>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  Manage Matches
+                </h1>
+
+                <p className="mt-2 max-w-lg text-sm leading-relaxed text-neutral-400">
+                  Create fixtures, update scores, and manage finished games.
+                </p>
               </div>
-            </section>
-          </div>
 
-          <section
-            ref={formSectionRef}
-            className="rounded-xl border border-neutral-800 bg-neutral-900 p-5"
-            style={{ opacity: 0 }}
-          >
-            <h2 className="text-lg font-black tracking-tight">Create match</h2>
+              <div className="flex items-center justify-between gap-6 rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 sm:min-w-32 sm:flex-col sm:items-center sm:gap-1">
+                <p className="text-xs font-medium text-neutral-500">
+                  Total matches
+                </p>
+
+                <p className="text-2xl font-bold tabular-nums text-white">
+                  {matches.length}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Create match */}
+
+          <section className="page-intro rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+            <div className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-red-400" />
+
+              <h2 className="text-base font-semibold text-white">
+                Create match
+              </h2>
+            </div>
 
             <form
               onSubmit={handleCreateMatch}
@@ -604,52 +693,69 @@ export default function MatchesPage() {
             >
               <input
                 value={homeTeam}
-                onChange={(e) => setHomeTeam(e.target.value)}
+                onChange={(event) => setHomeTeam(event.target.value)}
                 placeholder="Home team"
-                className="h-12 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10"
+                required
+                disabled={createMatchMutation.isPending}
+                className="h-11 min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500 disabled:opacity-50"
               />
 
               <input
                 value={awayTeam}
-                onChange={(e) => setAwayTeam(e.target.value)}
+                onChange={(event) => setAwayTeam(event.target.value)}
                 placeholder="Away team"
-                className="h-12 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10"
+                required
+                disabled={createMatchMutation.isPending}
+                className="h-11 min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500 disabled:opacity-50"
               />
 
               <input
                 value={matchDate}
-                onChange={(e) => setMatchDate(e.target.value)}
+                onChange={(event) => setMatchDate(event.target.value)}
                 type="datetime-local"
-                className="h-12 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10 [color-scheme:dark]"
+                required
+                disabled={createMatchMutation.isPending}
+                className="h-11 min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition focus:border-red-500 disabled:opacity-50 [color-scheme:dark]"
               />
 
               <button
                 type="submit"
                 disabled={createMatchMutation.isPending}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-red-600 px-6 text-sm font-black text-white transition hover:bg-red-500 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 lg:col-span-1"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2 lg:col-span-1"
               >
                 {createMatchMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                {createMatchMutation.isPending ? "Creating…" : "Create"}
+
+                {createMatchMutation.isPending ? "Creating..." : "Create"}
               </button>
             </form>
           </section>
 
-          <div
-            ref={listRef}
-            className="flex flex-col gap-3"
-            style={{ opacity: 0 }}
-          >
+          {/* Match list */}
+
+          <section className="page-intro space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-neutral-300">
+                Fixtures
+              </h2>
+
+              <span className="text-xs text-neutral-500">
+                {matches.length} {matches.length === 1 ? "match" : "matches"}
+              </span>
+            </div>
+
             {matches.length === 0 ? (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-8 text-center">
-                <ShieldAlert className="mx-auto h-8 w-8 text-neutral-600" />
-                <p className="mt-3 font-bold text-neutral-400">
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-12 text-center">
+                <ShieldAlert className="mx-auto h-7 w-7 text-neutral-600" />
+
+                <p className="mt-3 font-semibold text-neutral-300">
                   No matches yet
                 </p>
-                <p className="mt-1 text-sm text-neutral-600">
+
+                <p className="mt-1 text-sm text-neutral-500">
                   Use the form above to create your first fixture.
                 </p>
               </div>
@@ -665,17 +771,20 @@ export default function MatchesPage() {
                 />
               ))
             )}
-          </div>
+          </section>
         </div>
       </main>
 
       {/* Finish modal */}
+
       {finishTarget && (
         <FinishModal
           match={finishTarget}
           isPending={updateMatchMutation.isPending}
           onClose={() => setFinishTarget(null)}
-          onConfirm={(h, a) => handleFinishMatch(finishTarget, h, a)}
+          onConfirm={(home, away) =>
+            handleFinishMatch(finishTarget, home, away)
+          }
         />
       )}
     </>

@@ -1,4 +1,3 @@
-// store/useAuthStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -20,6 +19,7 @@ interface AuthState {
   user: User | null;
   hasHydrated: boolean;
   isAuthenticated: boolean;
+
   setUser: (user: User) => void;
   updateUser: (user: Partial<User>) => void;
   logout: () => void;
@@ -40,15 +40,16 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       updateUser: (userData) =>
-        set((state) => ({
-          user: state.user
-            ? {
-                ...state.user,
-                ...userData,
-              }
-            : (userData as User),
-          isAuthenticated: true,
-        })),
+        set((state) => {
+          if (!state.user) return state;
+
+          return {
+            user: {
+              ...state.user,
+              ...userData,
+            },
+          };
+        }),
 
       logout: () =>
         set({
@@ -63,6 +64,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "bloodline-auth",
+
+      // Only persist the profile, not authentication status.
+      partialize: (state) => ({
+        user: state.user,
+      }),
+
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

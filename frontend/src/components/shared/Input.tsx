@@ -1,49 +1,48 @@
-"use client";
+import {
+  useId,
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 
-import { useId } from "react";
-import { InputProps } from "../../types";
+type InputProps = {
+  label: string;
+  rightElement?: ReactNode;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "onChange">;
 
-function Input({
+export default function Input({
   label,
-  placeholder,
-  type,
-  value,
-  onChange,
-  id,
-  name,
-  autoComplete,
   rightElement,
+  id,
+  className = "",
+  type = "text",
+  ...props
 }: InputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
   return (
-    <div className="flex w-full flex-col gap-1.5">
+    <div className="w-full">
       <label
         htmlFor={inputId}
-        className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500"
+        className="mb-2 block text-sm font-bold text-neutral-300"
       >
         {label}
       </label>
 
-      <div className="relative flex items-center">
+      <div className="relative">
         <input
+          {...props}
           id={inputId}
-          name={name}
-          type={type ? type : "text"}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          pattern={type === "tel" ? "[0-9]{3}-[0-9]{3}-[0-9]{4}" : undefined}
-          autoComplete={autoComplete}
-          required
-          className={`h-12 w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10 ${
-            rightElement ? "pr-11" : ""
-          }`}
+          type={type}
+          className={`h-12 w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-60 ${
+            rightElement ? "pr-12" : ""
+          } ${className}`}
         />
 
         {rightElement && (
-          <div className="absolute right-2 flex items-center">
+          <div className="absolute inset-y-0 right-2 flex items-center">
             {rightElement}
           </div>
         )}
@@ -51,5 +50,3 @@ function Input({
     </div>
   );
 }
-
-export default Input;

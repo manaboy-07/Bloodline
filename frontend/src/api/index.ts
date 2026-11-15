@@ -1,116 +1,114 @@
-// lib/api.ts
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { baseURL } from "@/lib/baseurl";
 import { useAuthStore } from "@/store/useAuthStore";
 
 let hasShownSessionExpiredToast = false;
-console.log(baseURL);
+let isRedirecting = false;
+
 export const api = axios.create({
   baseURL,
   withCredentials: true,
+  headers: {
+    "X-API-Version": "1",
+  },
 });
 
-api.interceptors.request.use((config) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log("\nREQUEST:");
-    console.log("URL:", `${config.baseURL}${config.url}`);
-    console.log("METHOD:", config.method?.toUpperCase());
-    console.log("PARAMS:", config.params);
-    console.log("BODY:", config.data);
-    console.log("HEADERS:", config.headers);
-  }
+const isAuthEndpoint = (url?: string) => {
+  if (!url) return false;
 
-  return config;
-});
+  return ["/auth/login", "/auth/register", "/auth/signout"].some((endpoint) =>
+    url.includes(endpoint),
+  );
+};
+
+api.interceptors.request.use(
+  (config) => config,
+  (error) => Promise.reject(error),
+);
 
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    const status = err.response?.status;
+  (response) => response,
+  (error: AxiosError) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url;
 
-    // 401 — session expired or unauthenticated
-    if (status === 401) {
-      console.error("401 RESPONSE");
-      console.error("URL:", err.config?.url);
-      console.error("METHOD:", err.config?.method);
-      console.error("DATA:", err.response?.data);
-      // Clear auth state first
-      useAuthStore.getState().logout();
+    if (typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+      const isOnAuthPage = currentPath.startsWith("/auth");
+      const isOnUnauthorizedPage = currentPath.startsWith("/unauthorized");
 
-      if (typeof window !== "undefined") {
-        // Only show the toast once per session expiry cycle.
-        // The flag resets when the user lands back on /auth (see reset below).
-        if (!hasShownSessionExpiredToast) {
-          hasShownSessionExpiredToast = true;
+      // Login/register errors should be handled by the auth page.
+      if (isAuthEndpoint(requestUrl)) {
+        return Promise.reject(error);
+      }
 
-          toast.error("Session expired", {
-            description: "Please log in again to continue.",
-            // Auto-dismiss after 4s so it doesn't linger on the auth page
-            duration: 4000,
-          });
+      // Unauthenticated request to a protected endpoint.
+      if (status === 401) {
+        useAuthStore.getState().logout();
+
+        if (!isOnAuthPage && !isRedirecting) {
+          if (!hasShownSessionExpiredToast) {
+            hasShownSessionExpiredToast = true;
+
+            toast.error("Session expired", {
+              description: "Please log in again to continue.",
+              duration: 4000,
+            });
+          }
+
+          isRedirecting = true;
+          window.location.replace("/auth");
         }
+      }
 
-        // Only redirect if not already on /auth to prevent redirect loops
-        if (!window.location.pathname.startsWith("/auth")) {
-          window.location.href = "/auth";
-        }
+      // Authenticated, but without permission.
+      if (status === 403 && !isOnUnauthorizedPage) {
+        window.location.replace("/unauthorized");
       }
     }
 
-    // 403 — authenticated but not authorised
-    if (status === 403 && typeof window !== "undefined") {
-      window.location.href = "/unauthorized";
-    }
-
-    return Promise.reject(err);
+    return Promise.reject(error);
   },
 );
 
-// Call this once inside your /auth page component (e.g. in a useEffect)
-// so the toast can fire again if the user's next session also expires.
 export const resetSessionExpiredFlag = () => {
   hasShownSessionExpiredToast = false;
+  isRedirecting = false;
 };
 
-// ── Shared headers ─────────────────────────────────────────────────────────
-
-const headers = {
-  "X-API-Version": "1",
-};
-
-// ── Profile endpoints ──────────────────────────────────────────────────────
+// Profile endpoints
 
 export const getProfilesPage = async (page: number, limit: number) => {
-  const res = await api.get(`/api/profiles?page=${page}&limit=${limit}`, {
-    headers,
+  const { data } = await api.get("/api/profiles", {
+    params: { page, limit },
   });
-  return res.data;
+
+  return data;
 };
 
 export const getAllProfiles = async () => {
-  const res = await api.get("/api/profiles", {
-    headers,
-  });
-
-  return res.data;
+  const { data } = await api.get("/api/profiles");
+  return data;
 };
 
 export const searchProfile = async (query: string) => {
-  const res = await api.get("/api/profiles/search", {
-    params: {
-      q: query,
-    },
-    headers,
+  const { data } = await api.get("/api/profiles/search", {
+    params: { q: query },
   });
 
-  return res.data;
+  return data;
 };
 
-export const login = async (email: string, password: string) => {
-  const res = await api.post("/auth/login", { email, password }, { headers });
+// Authentication endpoints
 
-  return res.data;
+export const login = async (email: string, password: string) => {
+  const { data } = await api.post("/auth/login", {
+    email,
+    password,
+  });
+
+  return data;
 };
 
 export const signup = async (
@@ -119,21 +117,17 @@ export const signup = async (
   name: string,
   club: string,
 ) => {
-  const res = await api.post(
-    "/auth/register",
-    {
-      name,
-      email,
-      password,
-      club,
-    },
-    { headers },
-  );
+  const { data } = await api.post("/auth/register", {
+    name,
+    email,
+    password,
+    club,
+  });
 
-  return res.data;
+  return data;
 };
 
 export const signOut = async () => {
-  const res = await api.post("/auth/signout");
-  return res.data;
+  const { data } = await api.post("/auth/signout");
+  return data;
 };

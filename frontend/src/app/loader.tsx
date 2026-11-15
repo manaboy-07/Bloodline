@@ -10,91 +10,118 @@ interface AppLoaderProps {
   onComplete: () => void;
 }
 
+const splatters = [
+  { x: -40, y: -18 },
+  { x: 44, y: -14 },
+  { x: -18, y: -48 },
+  { x: 26, y: -42 },
+  { x: -56, y: -6 },
+  { x: 58, y: -8 },
+];
+
 export default function AppLoader({ onComplete }: AppLoaderProps) {
   const container = useRef<HTMLDivElement>(null);
-  const onCompleteRef = useRef(onComplete);
-  const hasCompleted = useRef(false);
+  const completed = useRef(false);
+  const callback = useRef(onComplete);
 
-  onCompleteRef.current = onComplete;
+  callback.current = onComplete;
 
   useGSAP(
     () => {
       const root = container.current;
       if (!root) return;
 
-      const complete = () => {
-        if (hasCompleted.current) return;
-        hasCompleted.current = true;
-        onCompleteRef.current();
+      const finish = () => {
+        if (completed.current) return;
+
+        completed.current = true;
+        callback.current();
       };
 
-      const prefersReducedMotion = window.matchMedia(
+      const elements = {
+        drop: root.querySelector(".blood-drop"),
+        text: root.querySelector(".blood-text"),
+        rings: root.querySelectorAll(".blood-ring"),
+        splatters: root.querySelectorAll(".splatter"),
+      };
+
+      const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
 
-      if (prefersReducedMotion) {
-        gsap.set(root, { autoAlpha: 1 });
-        gsap.delayedCall(0.3, complete);
-        return;
+      if (reducedMotion) {
+        const call = gsap.delayedCall(0.2, finish);
+        return () => call.kill();
       }
 
-      const fallback = gsap.delayedCall(5, complete);
-
-      gsap.set(".blood-drop", {
-        y: -220,
+      gsap.set(elements.drop, {
+        y: -180,
         scaleY: 0.5,
         scaleX: 1,
         autoAlpha: 0,
         transformOrigin: "center bottom",
-        force3D: true,
       });
-      gsap.set(".blood-text", { autoAlpha: 0, y: 24, force3D: true });
-      gsap.set(".blood-ring", {
+
+      gsap.set(elements.text, {
+        y: 20,
+        autoAlpha: 0,
+      });
+
+      gsap.set(elements.rings, {
         scale: 0,
         autoAlpha: 0,
         transformOrigin: "center center",
-        force3D: true,
       });
-      gsap.set(".blood-ring-2", {
+
+      gsap.set(elements.splatters, {
         scale: 0,
         autoAlpha: 0,
-        transformOrigin: "center center",
-        force3D: true,
-      });
-      gsap.set(".splatter", { scale: 0, autoAlpha: 0, force3D: true });
-
-      const tl = gsap.timeline({
-        defaults: { overwrite: "auto" },
-        onComplete: () => {
-          fallback.kill();
-          complete();
-        },
       });
 
-      tl.to(".blood-drop", {
-        y: 0,
-        autoAlpha: 1,
-        scaleY: 1,
-        duration: 0.65,
-        ease: "power4.in",
-      })
+      const timeline = gsap.timeline({
+        onComplete: finish,
+      });
+
+      timeline
+        .to(elements.drop, {
+          y: 0,
+          autoAlpha: 1,
+          scaleY: 1,
+          duration: 0.65,
+          ease: "power4.in",
+        })
         .to(
-          ".blood-drop",
-          { scaleX: 2.2, scaleY: 0.22, duration: 0.14, ease: "power3.out" },
+          elements.drop,
+          {
+            scaleX: 2.2,
+            scaleY: 0.22,
+            duration: 0.14,
+            ease: "power3.out",
+          },
           "-=0.04",
         )
         .to(
-          ".blood-ring",
-          { scale: 3.2, autoAlpha: 0, duration: 0.55, ease: "expo.out" },
+          elements.rings[0],
+          {
+            scale: 3.2,
+            autoAlpha: 0,
+            duration: 0.55,
+            ease: "expo.out",
+          },
           "<",
         )
         .to(
-          ".blood-ring-2",
-          { scale: 2.4, autoAlpha: 0, duration: 0.5, ease: "expo.out" },
+          elements.rings[1],
+          {
+            scale: 2.4,
+            autoAlpha: 0,
+            duration: 0.5,
+            ease: "expo.out",
+          },
           "<+=0.07",
         )
         .to(
-          ".splatter",
+          elements.splatters,
           {
             scale: 1,
             autoAlpha: 0,
@@ -105,7 +132,7 @@ export default function AppLoader({ onComplete }: AppLoaderProps) {
           "<",
         )
         .to(
-          ".blood-drop",
+          elements.drop,
           {
             scaleX: 1,
             scaleY: 1,
@@ -115,62 +142,53 @@ export default function AppLoader({ onComplete }: AppLoaderProps) {
           "-=0.42",
         )
         .to(
-          ".blood-text",
-          { autoAlpha: 1, y: 0, duration: 0.65, ease: "power4.out" },
+          elements.text,
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.65,
+            ease: "power4.out",
+          },
           "-=0.3",
         )
         .to(root, {
           autoAlpha: 0,
-          scale: 1.02,
           duration: 0.45,
-          delay: 0.4,
+          delay: 0.45,
           ease: "power3.inOut",
         });
 
       return () => {
-        fallback.kill();
-        tl.kill();
+        timeline.kill();
       };
     },
     { scope: container },
   );
 
-  const splatters = [
-    { x: -40, y: -18 },
-    { x: 44, y: -14 },
-    { x: -18, y: -48 },
-    { x: 26, y: -42 },
-    { x: -56, y: -6 },
-    { x: 58, y: -8 },
-  ];
-
   return (
     <div
       ref={container}
-      className="pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black"
-      aria-hidden="true"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black"
+      aria-label="Loading Bloodline"
+      role="status"
     >
-      <div className="absolute h-[480px] w-[480px] rounded-full bg-red-700/8 blur-[96px]" />
+      <div className="absolute h-[480px] w-[480px] rounded-full bg-red-700/10 blur-[96px]" />
 
       <div className="relative flex flex-col items-center gap-8">
         <div className="relative flex items-center justify-center">
-          <div className="blood-ring absolute h-20 w-20 rounded-full border-2 border-red-500/50 will-change-transform" />
-          <div className="blood-ring-2 absolute h-16 w-16 rounded-full border border-red-400/30 will-change-transform" />
+          <div className="blood-ring absolute h-20 w-20 rounded-full border-2 border-red-500/50" />
+          <div className="blood-ring absolute h-16 w-16 rounded-full border border-red-400/30" />
 
-          <div
-            className="blood-drop will-change-transform"
-            style={{ width: 42, height: 58, transformOrigin: "center bottom" }}
-          >
+          <div className="blood-drop" style={{ width: 42, height: 58 }}>
             <svg
               viewBox="0 0 42 58"
               xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "100%", height: "100%", overflow: "visible" }}
+              className="h-full w-full overflow-visible"
             >
               <path
                 d="M21 2 C21 2, 40 24, 40 36 C40 47.6 31.6 56 21 56 C10.4 56 2 47.6 2 36 C2 24 21 2 21 2 Z"
                 fill="#dc2626"
               />
-
               <ellipse
                 cx="15"
                 cy="26"
@@ -181,19 +199,22 @@ export default function AppLoader({ onComplete }: AppLoaderProps) {
             </svg>
           </div>
 
-          {splatters.map((s, i) => (
+          {splatters.map((s, index) => (
             <div
-              key={i}
-              className="splatter absolute h-2 w-2 rounded-full bg-red-600 will-change-transform"
-              style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
+              key={index}
+              className="splatter absolute h-2 w-2 rounded-full bg-red-600"
+              style={{
+                transform: `translate(${s.x}px, ${s.y}px)`,
+              }}
             />
           ))}
         </div>
 
-        <div className="blood-text select-none text-center will-change-transform">
+        <div className="blood-text select-none text-center">
           <h1 className="bg-gradient-to-r from-white via-red-100 to-red-500 bg-clip-text text-6xl font-black tracking-tight text-transparent sm:text-7xl">
             Bloodline
           </h1>
+
           <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.45em] text-red-500/55 sm:text-xs">
             Prediction League
           </p>
