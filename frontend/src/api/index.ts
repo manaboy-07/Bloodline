@@ -1,5 +1,6 @@
-import axios, { AxiosError } from "axios";
+import axios, { type AxiosError } from "axios";
 import { toast } from "sonner";
+
 import { baseURL } from "@/lib/baseurl";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -14,70 +15,94 @@ export const api = axios.create({
   },
 });
 
-const isAuthEndpoint = (url?: string) => {
+/**
+ * Authentication endpoints are handled by their respective
+ * pages/services rather than the global session interceptor.
+ */
+const AUTH_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/signout",
+] as const;
+
+const isAuthEndpoint = (url?: string): boolean => {
   if (!url) return false;
 
-  return ["/auth/login", "/auth/register", "/auth/signout"].some((endpoint) =>
-    url.includes(endpoint),
-  );
+  try {
+    const pathname = new URL(url, baseURL).pathname.replace(/\/+$/, "");
+
+    return AUTH_ENDPOINTS.some((endpoint) => pathname === endpoint);
+  } catch {
+    return false;
+  }
 };
 
-api.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(error),
-);
-
+/**
+ * Axios response interceptor.
+ *
+ * 401: Unauthenticated / expired session.
+ * 403: Authenticated but insufficient permissions.
+ */
 api.interceptors.response.use(
   (response) => response,
+
   (error: AxiosError) => {
     const status = error.response?.status;
     const requestUrl = error.config?.url;
 
-    if (typeof window !== "undefined") {
-      const currentPath = window.location.pathname;
-      const isOnAuthPage = currentPath.startsWith("/auth");
-      const isOnUnauthorizedPage = currentPath.startsWith("/unauthorized");
+    if (typeof window === "undefined") {
+      return Promise.reject(error);
+    }
 
-      // Login/register errors should be handled by the auth page.
-      if (isAuthEndpoint(requestUrl)) {
-        return Promise.reject(error);
-      }
+    const currentPath = window.location.pathname;
 
-      // Unauthenticated request to a protected endpoint.
-      if (status === 401) {
-        useAuthStore.getState().logout();
+    const isOnAuthPage = currentPath.startsWith("/auth");
+    const isOnUnauthorizedPage = currentPath.startsWith("/unauthorized");
 
-        if (!isOnAuthPage && !isRedirecting) {
-          if (!hasShownSessionExpiredToast) {
-            hasShownSessionExpiredToast = true;
+    // Authentication errors belong to the authentication flow.
+    if (isAuthEndpoint(requestUrl)) {
+      return Promise.reject(error);
+    }
 
-            toast.error("Session expired", {
-              description: "Please log in again to continue.",
-              duration: 4000,
-            });
-          }
+    // Session is missing or has expired.
+    if (status === 401) {
+      useAuthStore.getState().logout();
 
-          isRedirecting = true;
-          window.location.replace("/auth");
+      if (!isOnAuthPage && !isRedirecting) {
+        if (!hasShownSessionExpiredToast) {
+          hasShownSessionExpiredToast = true;
+
+          toast.error("Session expired", {
+            description: "Please log in again to continue.",
+            duration: 4000,
+          });
         }
-      }
 
-      // Authenticated, but without permission.
-      if (status === 403 && !isOnUnauthorizedPage) {
-        window.location.replace("/unauthorized");
+        isRedirecting = true;
+        window.location.replace("/auth");
       }
+    }
+
+    // User is authenticated but lacks permission.
+    if (status === 403 && !isOnUnauthorizedPage) {
+      window.location.replace("/unauthorized");
     }
 
     return Promise.reject(error);
   },
 );
 
-export const resetSessionExpiredFlag = () => {
+/**
+ * Reset session flags when entering the authentication flow.
+ */
+export const resetSessionExpiredFlag = (): void => {
   hasShownSessionExpiredToast = false;
   isRedirecting = false;
 };
 
-// Profile endpoints
+// ============================================
+// PROFILE ENDPOINTS
+// ============================================
 
 export const getProfilesPage = async (page: number, limit: number) => {
   const { data } = await api.get("/api/profiles", {
@@ -89,6 +114,7 @@ export const getProfilesPage = async (page: number, limit: number) => {
 
 export const getAllProfiles = async () => {
   const { data } = await api.get("/api/profiles");
+
   return data;
 };
 
@@ -100,7 +126,9 @@ export const searchProfile = async (query: string) => {
   return data;
 };
 
-// Authentication endpoints
+// ============================================
+// AUTHENTICATION ENDPOINTS
+// ============================================
 
 export const login = async (email: string, password: string) => {
   const { data } = await api.post("/auth/login", {
@@ -129,5 +157,6 @@ export const signup = async (
 
 export const signOut = async () => {
   const { data } = await api.post("/auth/signout");
+
   return data;
 };

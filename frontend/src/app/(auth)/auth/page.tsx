@@ -49,7 +49,8 @@ function PasswordToggle({
       type="button"
       onClick={onToggle}
       aria-label={visible ? "Hide password" : "Show password"}
-      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-neutral-500 transition hover:text-white"
+      aria-pressed={visible}
+      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-neutral-500 transition-colors hover:text-white"
     >
       {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
     </button>
@@ -59,23 +60,21 @@ function PasswordToggle({
 function Feature({
   icon: Icon,
   title,
-  text,
+  description,
 }: {
   icon: typeof Trophy;
   title: string;
-  text: string;
+  description: string;
 }) {
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-950 text-red-400">
-          <Icon className="h-5 w-5" />
-        </div>
+    <div className="flex items-start gap-4 border-t border-neutral-800 py-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 text-red-500">
+        <Icon className="h-5 w-5" />
+      </div>
 
-        <div>
-          <h3 className="text-sm font-bold text-white">{title}</h3>
-          <p className="mt-1 text-sm leading-5 text-neutral-500">{text}</p>
-        </div>
+      <div>
+        <h3 className="text-sm font-semibold text-neutral-100">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-neutral-500">{description}</p>
       </div>
     </div>
   );
@@ -90,10 +89,12 @@ export default function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
+  // Registration state
   const [name, setName] = useState("");
   const [club, setClub] = useState("Manchester United");
   const [signupEmail, setSignupEmail] = useState("");
@@ -104,54 +105,52 @@ export default function AuthPage() {
     resetSessionExpiredFlag();
   }, []);
 
+  // Main entrance animation
   useGSAP(
     () => {
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
 
-      if (reducedMotion) {
-        gsap.set(".auth-panel, .auth-side", {
-          autoAlpha: 1,
-          clearProps: "all",
-        });
-        return;
-      }
+      if (reducedMotion) return;
 
-      gsap.set(".auth-panel", {
-        autoAlpha: 0,
-        y: 18,
+      const timeline = gsap.timeline({
+        defaults: {
+          ease: "power3.out",
+        },
       });
 
-      gsap.set(".auth-side", {
-        autoAlpha: 0,
-        x: -18,
-      });
-
-      gsap
-        .timeline({
-          defaults: {
-            ease: "power3.out",
+      timeline
+        .fromTo(
+          ".auth-panel",
+          {
+            autoAlpha: 0,
+            y: 16,
           },
-        })
-        .to(".auth-panel", {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.6,
-        })
-        .to(
-          ".auth-side",
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.55,
+          },
+        )
+        .fromTo(
+          ".auth-side-content",
+          {
+            autoAlpha: 0,
+            x: -12,
+          },
           {
             autoAlpha: 1,
             x: 0,
-            duration: 0.5,
+            duration: 0.45,
           },
-          "-=0.3",
+          "-=0.25",
         );
     },
     { scope: container },
   );
 
+  // Form transition when switching between login and signup
   useGSAP(
     () => {
       const reducedMotion = window.matchMedia(
@@ -164,13 +163,13 @@ export default function AuthPage() {
         ".form-field",
         {
           autoAlpha: 0,
-          y: 10,
+          y: 8,
         },
         {
           autoAlpha: 1,
           y: 0,
           duration: 0.3,
-          stagger: 0.04,
+          stagger: 0.045,
           ease: "power2.out",
           clearProps: "all",
         },
@@ -219,8 +218,15 @@ export default function AuthPage() {
     if (isSubmitting) return;
 
     if (mode === "login") {
-      if (!loginEmail.trim() || !loginPassword) {
+      const email = loginEmail.trim();
+
+      if (!email || !loginPassword) {
         toast.error("Enter your email and password.");
+        return;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error("Enter a valid email address.");
         return;
       }
     } else {
@@ -276,99 +282,132 @@ export default function AuthPage() {
   return (
     <main
       ref={container}
-      className="flex min-h-svh items-center justify-center bg-neutral-950 px-4 py-6 text-white sm:px-6"
+      className="flex min-h-svh items-center justify-center bg-[#090909] px-4 py-8 text-white sm:px-6"
     >
-      <section className="auth-panel invisible grid w-full max-w-6xl overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-[0_24px_90px_rgba(0,0,0,0.45)] lg:grid-cols-[0.95fr_1.05fr]">
-        <aside className="auth-side invisible relative border-b border-neutral-800 bg-neutral-950 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600">
-              <Flame className="h-6 w-6" />
+      <section className="auth-panel grid w-full max-w-6xl overflow-hidden rounded-2xl border border-neutral-800 bg-[#101010] shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+        {/* Brand and product information */}
+        <aside className="relative flex flex-col justify-between border-b border-neutral-800 bg-[#0c0c0c] p-6 sm:p-10 lg:border-b-0 lg:border-r">
+          <div className="auth-side-content">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white">
+                <Flame className="h-6 w-6" />
+              </div>
+
+              <div>
+                <h1 className="text-xl font-black tracking-tight">Bloodline</h1>
+                <p className="text-xs font-medium tracking-wide text-neutral-500">
+                  PREDICTION LEAGUE
+                </p>
+              </div>
             </div>
 
-            <div>
-              <h1 className="text-xl font-black tracking-tight">Bloodline</h1>
-              <p className="text-sm text-neutral-500">Prediction League</p>
+            <div className="mt-14 max-w-md lg:mt-24">
+              <div className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-red-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                The game beyond the game
+              </div>
+
+              <h2 className="text-4xl font-black leading-[1.1] tracking-tight sm:text-5xl">
+                Know the game.
+                <br />
+                <span className="text-neutral-500">Call the score.</span>
+              </h2>
+
+              <p className="mt-6 max-w-sm text-sm leading-7 text-neutral-400">
+                Make your predictions, earn points, track your performance and
+                compete with football minds across the league.
+              </p>
+            </div>
+
+            <div className="mt-12 space-y-1">
+              <Feature
+                icon={Trophy}
+                title="Compete for the top"
+                description="Climb the leaderboard and prove your football knowledge."
+              />
+
+              <Feature
+                icon={ShieldCheck}
+                title="Your own predictor profile"
+                description="Create your account, represent your club and build your record."
+              />
             </div>
           </div>
 
-          <div className="mt-8 max-w-md sm:mt-10 lg:mt-12">
-            <p className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] text-red-400">
-              <Flame className="h-4 w-4" />
-              Football predictions
-            </p>
+          <div className="auth-side-content mt-12 flex items-center justify-between border-t border-neutral-800 pt-5">
+            <span className="text-[11px] font-medium uppercase tracking-widest text-neutral-600">
+              Bloodline © {new Date().getFullYear()}
+            </span>
 
-            <h2 className="mt-6 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              Predict matches and climb the table.
-            </h2>
-
-            <p className="mt-5 text-sm leading-6 text-neutral-400 sm:text-base">
-              Make your score predictions, earn points, track your form, and
-              compete with other football minds each week.
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-3 sm:mt-10">
-            <Feature
-              icon={Trophy}
-              title="Leaderboard battles"
-              text="Compare points and ranking movement every week."
-            />
-
-            <Feature
-              icon={ShieldCheck}
-              title="Simple account setup"
-              text="Create your predictor profile and pick your club."
-            />
+            <span className="text-[11px] font-medium text-neutral-600">
+              Football. Predictions. Competition.
+            </span>
           </div>
         </aside>
 
-        <section className="flex items-center justify-center p-5 sm:p-8 lg:p-12">
+        {/* Authentication form */}
+        <section className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
           <div className="w-full max-w-md">
-            <div className="mb-7 grid grid-cols-2 rounded-lg border border-neutral-800 bg-neutral-950 p-1">
+            <div className="mb-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
+                Account access
+              </p>
+
+              <h2 className="mt-3 text-3xl font-bold tracking-tight">
+                {mode === "login" ? "Welcome back." : "Join Bloodline."}
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-neutral-500">
+                {mode === "login"
+                  ? "Sign in to continue your prediction journey."
+                  : "Create your predictor account and get in the game."}
+              </p>
+            </div>
+
+            {/* Mode selector */}
+            <div className="mb-8 grid grid-cols-2 border-b border-neutral-800">
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => setMode("login")}
-                className={`h-10 cursor-pointer rounded-md text-sm font-bold transition disabled:cursor-not-allowed ${
+                aria-pressed={mode === "login"}
+                className={`relative cursor-pointer py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed ${
                   mode === "login"
-                    ? "bg-red-600 text-white"
-                    : "text-neutral-400 hover:text-white"
+                    ? "text-white"
+                    : "text-neutral-500 hover:text-neutral-300"
                 }`}
               >
                 Login
+                {mode === "login" && (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-red-500" />
+                )}
               </button>
 
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => setMode("signup")}
-                className={`h-10 cursor-pointer rounded-md text-sm font-bold transition disabled:cursor-not-allowed ${
+                aria-pressed={mode === "signup"}
+                className={`relative cursor-pointer py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed ${
                   mode === "signup"
-                    ? "bg-red-600 text-white"
-                    : "text-neutral-400 hover:text-white"
+                    ? "text-white"
+                    : "text-neutral-500 hover:text-neutral-300"
                 }`}
               >
-                Sign Up
+                Create account
+                {mode === "signup" && (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-red-500" />
+                )}
               </button>
             </div>
 
             <div ref={formRef}>
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 {mode === "login" ? (
                   <>
                     <div className="form-field">
-                      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
-                        Welcome back
-                      </h2>
-
-                      <p className="mt-2 text-sm text-neutral-500">
-                        Continue your prediction run.
-                      </p>
-                    </div>
-
-                    <div className="form-field">
                       <Input
-                        label="Email"
+                        label="Email address"
                         type="email"
                         autoComplete="email"
                         required
@@ -401,36 +440,29 @@ export default function AuthPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="form-field group flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="form-field group mt-3 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isSubmitting ? "Logging in..." : "Login"}
-                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                      {isSubmitting ? "Logging in..." : "Sign in"}
+
+                      {!isSubmitting && (
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      )}
                     </button>
 
-                    <p className="form-field text-sm text-neutral-500">
-                      Don&apos;t have an account?{" "}
+                    <p className="form-field pt-3 text-center text-sm text-neutral-500">
+                      New to Bloodline?{" "}
                       <button
                         type="button"
                         disabled={isSubmitting}
                         onClick={() => setMode("signup")}
-                        className="cursor-pointer font-bold text-red-400 transition hover:text-red-300"
+                        className="cursor-pointer font-semibold text-red-500 transition-colors hover:text-red-400"
                       >
-                        Create account
+                        Create an account
                       </button>
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="form-field">
-                      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
-                        Join Bloodline
-                      </h2>
-
-                      <p className="mt-2 text-sm text-neutral-500">
-                        Build your predictor profile.
-                      </p>
-                    </div>
-
                     <div className="form-field">
                       <Input
                         label="Username"
@@ -441,16 +473,16 @@ export default function AuthPage() {
                         maxLength={30}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Your username"
+                        placeholder="Choose a username"
                       />
                     </div>
 
                     <div className="form-field">
                       <label
                         htmlFor="club"
-                        className="mb-2 block text-sm font-bold text-neutral-300"
+                        className="mb-2 block text-sm font-semibold text-neutral-300"
                       >
-                        Club Supported
+                        Club supported
                       </label>
 
                       <select
@@ -458,7 +490,7 @@ export default function AuthPage() {
                         required
                         value={club}
                         onChange={(e) => setClub(e.target.value)}
-                        className="h-12 w-full cursor-pointer rounded-lg border border-neutral-800 bg-neutral-950 px-3 text-sm text-white outline-none transition focus:border-red-500/50"
+                        className="h-12 w-full cursor-pointer rounded-lg border border-neutral-800 bg-[#0b0b0b] px-3 text-sm text-white outline-none transition-colors focus:border-red-500"
                       >
                         {clubs.map((item) => (
                           <option key={item} value={item}>
@@ -470,7 +502,7 @@ export default function AuthPage() {
 
                     <div className="form-field">
                       <Input
-                        label="Email"
+                        label="Email address"
                         type="email"
                         autoComplete="email"
                         required
@@ -504,21 +536,24 @@ export default function AuthPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="form-field group flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="form-field group mt-3 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isSubmitting ? "Creating account..." : "Create Account"}
-                      <UserPlus className="h-4 w-4 transition group-hover:scale-110" />
+                      {isSubmitting ? "Creating account..." : "Create account"}
+
+                      {!isSubmitting && (
+                        <UserPlus className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      )}
                     </button>
 
-                    <p className="form-field text-sm text-neutral-500">
+                    <p className="form-field pt-3 text-center text-sm text-neutral-500">
                       Already have an account?{" "}
                       <button
                         type="button"
                         disabled={isSubmitting}
                         onClick={() => setMode("login")}
-                        className="cursor-pointer font-bold text-red-400 transition hover:text-red-300"
+                        className="cursor-pointer font-semibold text-red-500 transition-colors hover:text-red-400"
                       >
-                        Login
+                        Sign in
                       </button>
                     </p>
                   </>
